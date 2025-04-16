@@ -3,3 +3,45 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# nextjs app in ./next/trust-chain/
+
+# dependencies
+next/trust-chain/node_modules
+next/trust-chain/.pnp
+next/trust-chain/.pnp.*
+next/trust-chain/.yarn/*
+!next/trust-chain/.yarn/patches
+!next/trust-chain/.yarn/plugins
+!next/trust-chain/.yarn/releases
+!next/trust-chain/.yarn/versions
+
+# testing
+next/trust-chain/coverage
+
+# next.js
+next/trust-chain/.next/
+next/trust-chain/out/
+
+# production
+next/trust-chain/build
+
+# misc
+next/trust-chain/.DS_Store
+next/trust-chain/*.pem
+
+# debug
+next/trust-chain/npm-debug.log*
+next/trust-chain/yarn-debug.log*
+next/trust-chain/yarn-error.log*
+next/trust-chain/.pnpm-debug.log*
+
+# env files
+next/trust-chain/.env*
+
+# vercel
+next/trust-chain/.vercel
+
+# typescript
+next/trust-chain/*.tsbuildinfo
+next/trust-chain/next-env.d.ts
