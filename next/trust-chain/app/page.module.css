@@ -1,0 +1,146 @@
+.main {
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  
+  .cardTitle {
+    font-size: 18px;
+    padding: 15px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .cardContent {
+    padding: 15px;
+  }
+  
+  .form {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .button {
+    padding: 8px 16px;
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .button:hover {
+    background-color: #0051a8;
+  }
+  
+  .resetButton {
+    background-color: #ef4444;
+  }
+  
+  .resetButton:hover {
+    background-color: #b91c1c;
+  }
+  
+  .badge {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .connected {
+    background-color: #10b981;
+  }
+  
+  .connecting {
+    background-color: #f59e0b;
+  }
+  
+  .disconnected {
+    background-color: #ef4444;
+  }
+  
+  .entry {
+    background-color: #10b981;
+  }
+  
+  .exit {
+    background-color: #ef4444;
+  }
+  
+  .unknown {
+    background-color: #6b7280;
+  }
+  
+  .codeBlock {
+    background-color: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  
+  .scanList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .scanItem {
+    background-color: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .timestamp {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  
+  .message {
+    font-family: monospace;
+    word-break: break-all;
+  }
+  
+  .emptyMessage {
+    color: #6b7280;
+    font-style: italic;
+  }
+  
