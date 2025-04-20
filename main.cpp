@@ -99,7 +99,7 @@ void setup() {
   WiFi.begin(ssid, password);
   Serial.print("Connecting to Wi‑Fi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    // delay(500);
     Serial.print('.');
   }
   Serial.println("\nWi‑Fi connected! IP: " + WiFi.localIP().toString());
@@ -127,12 +127,12 @@ void loop() {
   for (int i = 0; i < STAGES; i++) {
     if (digitalRead(entryPins[i]) == LOW) {
       Serial.printf("%s ‑ Entry triggered\n", stageNames[i]);
-      delay(1000);
+      // delay(1000);
       scanStage(i, "Entry");
     }
     if (digitalRead(exitPins[i]) == LOW) {
       Serial.printf("%s ‑ Exit triggered\n", stageNames[i]);
-      delay(2000);
+      // delay(2000);
       scanStage(i, "Exit");
     }
   }
@@ -143,7 +143,7 @@ void scanStage(int idx, const char *label) {
   MFRC522 &reader = readers[idx];
   reader.PCD_Reset();
   reader.PCD_Init();
-  delay(50);
+  // delay(50);
 
   String uidStr;
   bool success = false;

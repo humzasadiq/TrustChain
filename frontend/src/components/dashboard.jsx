@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState , useEffect} from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
@@ -21,6 +21,8 @@ import {
 } from "lucide-react"
 
 import { cn } from "../lib/utils"
+import ToggleSwitch from "./ui/switch"
+import TrustChainIOTReadings from "./Readings"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import {
   SidebarProvider,
@@ -155,7 +157,7 @@ export default function Dashboard() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      {/* <div className="flex h-screen w-full"> */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-4 py-3">
             <div className="flex items-center gap-2">
@@ -268,6 +270,7 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          
           <div className="p-4 md:p-6 w-full">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -278,7 +281,8 @@ export default function Dashboard() {
                 <SidebarTrigger className="md:hidden" />
               </div>
             </div>
-
+            {/* Recent Transactions Table */}
+            <TrustChainIOTReadings />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -423,57 +427,9 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Recent Transactions Table */}
-            <div className="mt-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>Latest blockchain transactions</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Transaction ID</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentTransactions.map((transaction, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-mono text-sm">{transaction.id}</TableCell>
-                          <TableCell>{transaction.type}</TableCell>
-                          <TableCell>{transaction.amount}</TableCell>
-                          <TableCell>
-                            <span
-                              className={cn(
-                                "px-2 py-1 rounded-full text-xs",
-                                transaction.status === "Completed" &&
-                                  "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-                                transaction.status === "Pending" &&
-                                  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-                                transaction.status === "Processing" &&
-                                  "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-                              )}
-                            >
-                              {transaction.status}
-                            </span>
-                          </TableCell>
-                          <TableCell>{transaction.date}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
-      </div>
+      {/* </div> */}
     </SidebarProvider>
   )
 }
