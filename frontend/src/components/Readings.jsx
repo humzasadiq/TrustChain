@@ -9,7 +9,7 @@ export default function TrustChainIOTReadings() {
     const [transactions, setTransactions] = useState([])
     const wsRef = useRef(null)
     const tableContainerRef = useRef(null)
-    const ESP_IP = "192.168.18.249"
+    const ESP_IP = "192.168.43.242"
     const [flashId, setFlashId] = useState(null)
 
     useEffect(() => {
