@@ -40,7 +40,8 @@ export default function Home() {
       <div className="flex-1 flex flex-col justify-center px-4 md:px-12 lg:px-20 z-10">
         <div className="space-y-8 max-w-[600px] mx-auto text-center">
           <div className="flex justify-center">
-            <Shield className="h-24 w-24 text-primary" />
+            {/* <Shield className="h-24 w-24 text-primary" /> */}
+            <img src="/logo.svg" alt="TrustChain" className="h-36 w-36 dark:invert" />
           </div>
           <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl">TrustChain</h1>
           <div className="h-20">
@@ -59,10 +60,10 @@ export default function Home() {
                 Dashboard
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="gap-2 text-lg px-6 py-6">
+            {/* <Button size="lg" variant="outline" className="gap-2 text-lg px-6 py-6">
               <LogOut className="h-5 w-5" />
               Leave for now
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

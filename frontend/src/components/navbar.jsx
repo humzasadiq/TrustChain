@@ -24,7 +24,8 @@ export default function Navbar() {
       <div className="flex h-16 items-center px-4 md:px-6">
         {/* Logo - Left aligned */}
         <Link to="/" className="flex items-center gap-2 mr-4">
-          <Shield className="h-6 w-6" />
+          {/* <Shield className="h-6 w-6" /> */}
+          <img src="/logo.svg" alt="TrustChain" className="h-10 w-10 dark:invert" />
           <span className="text-xl font-bold">TrustChain</span>
         </Link>
 

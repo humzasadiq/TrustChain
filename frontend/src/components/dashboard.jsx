@@ -23,6 +23,8 @@ import {
 import { cn } from "../lib/utils"
 import ToggleSwitch from "./ui/switch"
 import TrustChainIOTReadings from "./Readings"
+import LiveBlock from "./ui/liveblock"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import {
   SidebarProvider,
@@ -56,6 +58,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+
 
 // Sample data for charts
 const lineChartData = [
@@ -283,6 +286,7 @@ export default function Dashboard() {
             </div>
             {/* Recent Transactions Table */}
             <TrustChainIOTReadings />
+            <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
