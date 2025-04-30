@@ -285,26 +285,16 @@ export default function Dashboard() {
               </div>
             </div>
             {/* Recent Transactions Table */}
-            <TrustChainIOTReadings />
+            {/* <TrustChainIOTReadings /> */}
             <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+            <Card className={"p-0 m-0 dark:bg-black"}>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,248</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      +12.5%
-                    </span>{" "}
-                    from last month
-                  </p>
+                  <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0"/>
                 </CardContent>
               </Card>
+              
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Transactions</CardTitle>

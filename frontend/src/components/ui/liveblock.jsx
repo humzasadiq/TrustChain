@@ -3,78 +3,42 @@ import { cn } from "../../lib/utils";
 import ToggleSwitch from "./switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
+import { PlayIcon, PauseIcon } from "lucide-react";
 
 export default function ProductionLineAnimation() {
-  const [wsStatus, setWsStatus] = useState("disconnected");
-  const [transactions, setTransactions] = useState([]);
-  const [currentStage, setCurrentStage] = useState(null);
-  const [stageStatus, setStageStatus] = useState({}); // For blinking effects
-  const wsRef = useRef(null);
-  const ESP_IP = "192.168.43.242";
-  const [flashId, setFlashId] = useState(null);
-  const animationRef = useRef(null);
-  const carRef = useRef(null);
-
-  // Stage positions (as percentages)
-  const stagePositions = {
-    S1: 25,
-    S2: 50,
-    S3: 75,
-  };
-
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
-
-  // Handle car animation based on current stage
-  useEffect(() => {
-    if (currentStage && carRef.current) {
-      const position = stagePositions[currentStage] || 0;
-      carRef.current.style.transition = "left 1.5s ease-in-out";
-      carRef.current.style.left = `${position}%`;
-    }
-  }, [currentStage]);
-
-  // Handle stage status changes for blinking effects
-  useEffect(() => {
-    const clearBlinkEffects = () => {
-      Object.keys(stageStatus).forEach(stage => {
-        if (stageStatus[stage].timeoutId) {
-          clearTimeout(stageStatus[stage].timeoutId);
-        }
-      });
+    const [wsStatus, setWsStatus] = useState("disconnected");
+    const [transactions, setTransactions] = useState([]);
+    const [currentStage, setCurrentStage] = useState(null);
+    const [stageStatus, setStageStatus] = useState({}); // For blinking effects
+    const wsRef = useRef(null);
+    const ESP_IP = "192.168.100.45";
+    const [flashId, setFlashId] = useState(null);
+    const animationRef = useRef(null);
+    const carRef = useRef(null);
+  
+    // Stage positions (as percentages)
+    const stagePositions = {
+      S1: 20, // Adjusted from 25
+      S2: 45,
+      S3: 70, // Adjusted from 75
     };
 
-    return () => clearBlinkEffects();
-  }, [stageStatus]);
-
-  const connectWebSocket = () => {
-    setWsStatus("connecting");
-    const socket = new WebSocket(`ws://${ESP_IP}/ws`);
-    wsRef.current = socket;
-
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-      setWsStatus("connected");
-    };
-
-    socket.onmessage = (event) => {
-      const message = event.data;
-      const idx = message.indexOf(' [');
-      const stage = idx !== -1 ? message.substring(0, idx) : message;
+    const handleStageUpdate = (stage, message) => {
+        // Extract stage number from the message (e.g., "Stage 3" -> "S3")
+        const stageMatch = stage.match(/Stage (\d+)/);
+        if (!stageMatch) return;
       
-      // Update current stage for car animation
-      if (stage.includes("S1") || stage.includes("S2") || stage.includes("S3")) {
-        const stageName = stage.includes("S1") ? "S1" : 
-                          stage.includes("S2") ? "S2" : 
-                          stage.includes("S3") ? "S3" : null;
-        setCurrentStage(stageName);
+        // Convert stage number to our format (S1, S2, S3)
+        const stageName = `S${stageMatch[1]}`;
         
-        // Set blinking effect
+        // Validate stage name
+        if (!['S1', 'S2', 'S3'].includes(stageName)) return;
+        
+        // Update current stage for car animation
+        setCurrentStage(stageName);
+        console.log("Moving to stage:", stageName);
+      
+        // Determine the type of event
         let statusType = "unknown";
         if (message.includes("UID:")) {
           statusType = "rfid";
@@ -83,108 +47,169 @@ export default function ProductionLineAnimation() {
         } else if (message.includes("[Exit]")) {
           statusType = "exit";
         }
-        
-        // Apply blinking effect to the stage
-        if (stageName) {
-          setStageStatus(prev => {
-            // Clear previous timeout if exists
-            if (prev[stageName]?.timeoutId) {
-              clearTimeout(prev[stageName].timeoutId);
-            }
-            
-            // Set new timeout
-            const timeoutId = setTimeout(() => {
-              setStageStatus(current => ({
-                ...current,
-                [stageName]: { ...current[stageName], active: false, timeoutId: null }
-              }));
-            }, 2000);
-            
-            return {
-              ...prev,
-              [stageName]: { active: true, type: statusType, timeoutId }
-            };
-          });
+        else if (message.includes("without")) {
+            statusType = "Caution";
         }
-      }
-
-      // Process for transaction table
-      let status = "Unknown";
-      if (message.includes("UID:")) {
-        status = "RFID Scanned";
-      } else if (message.includes("[Entry]")) {
-        status = "Entry";
-      } else if (message.includes("[Exit]")) {
-        status = "Exit";
-      }
-
-      const action = message.includes("[Exit]") ? "Exit" : "Entry";
-
-      let rfidTag = "";
-      if (message.includes("UID:")) {
-        const parts = message.split("UID:");
-        rfidTag = parts[1]?.trim() || "";
-      }
-
-      const newId = Date.now();
-      setTransactions(prev => [
-        {
-          id: newId,
-          stage,
-          status,
-          action,
-          rfidTag,
-          carPart: "Unknown",
-          timestamp: new Date().toLocaleString()
-        },
-        ...prev.slice(0, 19)
-      ]);
       
-      setFlashId(newId);
-      setTimeout(() => setFlashId(null), 1000);
-    };
+        // Update stage status for blinking effect
+        setStageStatus(prev => {
+          const newStatus = { ...prev };
+          
+          // Clear any existing timeout for this stage
+          if (newStatus[stageName]?.timeoutId) {
+            clearTimeout(newStatus[stageName].timeoutId);
+          }
+      
+          // Set new timeout to clear the blinking effect
+          const timeoutId = setTimeout(() => {
+            setStageStatus(current => ({
+              ...current,
+              [stageName]: { active: false, timeoutId: null }
+            }));
+          }, 2000);
+      
+          // Update the stage status
+          newStatus[stageName] = { 
+            active: true, 
+            type: statusType, 
+            timeoutId 
+          };
+      
+          return newStatus;
+        });
+      };
 
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-      setWsStatus("disconnected");
-    };
-
-    socket.onerror = (err) => {
-      console.error("WebSocket error", err);
-      socket.close();
-    };
-  };
-
-  const handleToggle = (checked) => {
-    if (checked) {
-      connectWebSocket();
-    } else {
-      if (wsRef.current) {
-        wsRef.current.close();
+    useEffect(() => {
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+      };
+    }, []);
+  
+    // Handle car animation based on current stage
+    useEffect(() => {
+      if (currentStage && carRef.current) {
+        const position = stagePositions[currentStage] || 0;
+        carRef.current.style.transition = "left 1s ease-in-out";
+        carRef.current.style.left = `${position}%`;
       }
-      setWsStatus("disconnected");
-    }
-  };
+    }, [currentStage]);
+  
+    // Handle stage status changes for blinking effects
+    useEffect(() => {
+      const clearBlinkEffects = () => {
+        Object.keys(stageStatus).forEach(stage => {
+          if (stageStatus[stage].timeoutId) {
+            clearTimeout(stageStatus[stage].timeoutId);
+          }
+        });
+      };
+  
+      return () => clearBlinkEffects();
+    }, [stageStatus]);
+  
+    const connectWebSocket = () => {
+      setWsStatus("connecting");
+      const socket = new WebSocket(`ws://${ESP_IP}/ws`);
+      wsRef.current = socket;
+  
+      socket.onopen = () => {
+        console.log("WebSocket connected");
+        setWsStatus("connected");
+      };
+  
+      // Update WebSocket message handler
+      socket.onmessage = (event) => {
+        const message = event.data;
+        const idx = message.indexOf(' [');
+        const stage = idx !== -1 ? message.substring(0, idx) : message;
+        console.log(message);
+        console.log(stage);
+        
+        // Handle stage updates
+        handleStageUpdate(stage, message);
 
-  const statusColors = {
-    Entry: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-    "RFID Scanned": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-    Exit: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-  };
-
-  // Get stage class based on status
-  const getStageClass = (stageName) => {
-    if (!stageStatus[stageName]?.active) return "";
-    
-    const type = stageStatus[stageName]?.type;
-    if (type === "entry") return "stage-blink-green";
-    if (type === "rfid") return "stage-blink-orange";
-    if (type === "exit") return "stage-blink-red";
-    return "";
-  };
+        // Process for transaction table
+        let status = "Unknown";
+        if (message.includes("UID:")) {
+          status = "RFID Scanned";
+        } else if (message.includes("[Entry]")) {
+          status = "Entry";
+        } else if (message.includes("[Exit]")) {
+          status = "Exit";
+        }
+        else if (message.includes("without")) {
+            status = "Caution";
+        }
+  
+        const action = message.includes("[Exit]") ? "Exit" : "Entry";
+  
+        let rfidTag = "";
+        if (message.includes("UID:")) {
+          const parts = message.split("UID:");
+          rfidTag = parts[1]?.trim() || "";
+        }
+  
+        const newId = Date.now();
+        setTransactions(prev => [
+          {
+            id: newId,
+            stage,
+            status,
+            action,
+            rfidTag,
+            carPart: "Unknown",
+            timestamp: new Date().toLocaleString()
+          },
+          ...prev.slice(0, 19)
+        ]);
+        
+        setFlashId(newId);
+        setTimeout(() => setFlashId(null), 1000);
+      };
+  
+      socket.onclose = () => {
+        console.log("WebSocket disconnected");
+        setWsStatus("disconnected");
+      };
+  
+      socket.onerror = (err) => {
+        console.error("WebSocket error", err);
+        socket.close();
+      };
+    };
+  
+    const handleToggle = (checked) => {
+      if (checked) {
+        connectWebSocket();
+      } else {
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+        setWsStatus("disconnected");
+      }
+    };
+  
+    const statusColors = {
+      Entry: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      "RFID Scanned": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+      Exit: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+    };
+  
+    // Get stage class based on status
+    const getStageClass = (stageName) => {
+      if (!stageStatus[stageName]?.active) return "";
+      
+      const type = stageStatus[stageName]?.type;
+      if (type === "entry") return "stage-blink-green";
+      if (type === "rfid") return "stage-blink-orange";
+      if (type === "exit") return "stage-blink-red";
+      return "";
+    };
 
   return (
-    <div className="mt-6 mb-6">
+    <div className="mb-6">
       <Card className="flex flex-col">
         <CardHeader className="border-b">
           <div className="flex justify-between items-center">
@@ -207,40 +232,42 @@ export default function ProductionLineAnimation() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="">
           {/* Production Line Animation */}
-          <div className="border border-gray-200 rounded-lg p-6 mb-8 relative">
-            <div className="h-64 relative">
+          <div className="border border-backlighter rounded-lg p-3 sm:p-6 mb-4 relative bg-zinc-800">
+            <div className="h-48 relative">
               {/* Animated dashed line */}
               <div className="absolute z-1 top-1/2 left-0 right-0 h-1 bg-transparent transform -translate-y-1/2">
                 <div className="moving-dashes"></div>
               </div>
               
               {/* Production Stages */}
-              <div className={`absolute z-2 bg-red-300/90 border-backlighter top-1/2 left-[25%] transform -translate-x-1/2 -translate-y-1/2 w-40 h-28 border rounded-lg flex items-center justify-center text-2xl font-bold ${getStageClass("S1")}`}>
+              <div className={`absolute z-2 bg-red-300/50 border-gray-300 top-1/2 left-[25%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S1")}`}>
                 S1
               </div>
-              <div className={`absolute z-2 bg-blue-300/90 top-1/2 left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-40 h-28 border rounded-lg flex items-center justify-center text-2xl font-bold ${getStageClass("S2")}`}>
+              <div className={`absolute z-2 bg-purple-300/50 top-1/2 left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S2")}`}>
                 S2
               </div>
-              <div className={`absolute z-2 bg-orange-300/90 top-1/2 left-[75%] transform -translate-x-1/2 -translate-y-1/2 w-40 h-28 border rounded-lg flex items-center justify-center text-2xl font-bold ${getStageClass("S3")}`}>
+              <div className={`absolute z-2 bg-green-300/50 top-1/2 left-[75%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S3")}`}>
                 S3
               </div>
               
               {/* Car */}
               <div 
                 ref={carRef} 
-                className="absolute z-3 top-1/2 left-0 transform -translate-y-13 w-26"
-                style={{ transition: "left 1.5s ease-in-out" }}
+                className="absolute z-3 top-1/2 transform -translate-y-1/2 w-16 sm:w-24"
+                style={{ 
+                  transition: "left 1s ease-in-out",
+                  left: currentStage ? `${stagePositions[currentStage]}%` : "0%"
+                }}
               >
                 <img 
                   src="/car.png" 
                   alt="Car" 
-                  className="w-full rotate-90 " 
+                  className="w-full rotate-90" 
                   onError={(e) => {
-                    e.target.style.background = "red";
-                    e.target.style.width = "100%";
-                    e.target.style.height = "100%";
+                    e.target.onerror = null;
+                    e.target.outerHTML = '<div style="width: 48px; height: 24px; background-color: red; transform: rotate(90deg);"></div>';
                   }}
                 />
               </div>
@@ -322,22 +349,22 @@ export default function ProductionLineAnimation() {
           height: 100%;
           background-image: linear-gradient(to right, #e5e7eb 50%, transparent 50%);
           background-size: 20px 100%;
-          animation: dashMove 1s linear infinite;
+          animation: ${wsStatus === "disconnected" ? "none" : "dashMove 1s linear infinite"};
         }
         
         @keyframes blinkGreen {
-          0%, 100% { background-color: transparent; }
-          50% { background-color: rgba(74, 222, 128, 0.3); }
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(74, 222, 128, 0.8); }
         }
         
         @keyframes blinkOrange {
-          0%, 100% { background-color: transparent; }
-          50% { background-color: rgba(251, 146, 60, 0.3); }
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(251, 146, 60, 0.8); }
         }
         
         @keyframes blinkRed {
-          0%, 100% { background-color: transparent; }
-          50% { background-color: rgba(248, 113, 113, 0.3); }
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(248, 113, 113, 0.8); }
         }
         
         .stage-blink-green {
@@ -350,6 +377,20 @@ export default function ProductionLineAnimation() {
         
         .stage-blink-red {
           animation: blinkRed 0.5s ease-in-out infinite;
+        }
+
+        /* For smaller screens */
+        @media (max-width: 640px) {
+          .moving-dashes {
+            background-size: 15px 100%;
+          }
+        }
+
+        /* For very small screens */
+        @media (max-width: 480px) {
+          .moving-dashes {
+            background-size: 10px 100%;
+          }
         }
       `}</style>
     </div>
