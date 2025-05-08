@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Shield, LayoutDashboard, Shuffle, LogIn, Menu, X } from 'lucide-react'
+import { Shield, LayoutDashboard, LogIn, Menu, X, History } from 'lucide-react'
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
@@ -49,8 +49,8 @@ export default function Navbar() {
                 isActive("/random") && "text-primary",
               )}
             >
-              <Shuffle className="h-4 w-4" />
-              Random
+              <History className="h-4 w-4" />
+              Logs
             </Link>
           </nav>
         </div>
@@ -93,7 +93,7 @@ export default function Navbar() {
               className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/random") && "bg-muted")}
               onClick={toggleMenu}
             >
-              <Shuffle className="h-5 w-5" />
+              <History className="h-5 w-5" />
               Random
             </Link>
             <div className="flex flex-col gap-2 pt-2 border-t">

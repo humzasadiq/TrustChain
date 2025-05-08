@@ -1,7 +1,17 @@
 "use client"
 
-import { useState , useEffect} from "react"
+import { useState , useEffect, useRef } from "react"
 import { Link, useLocation } from "react-router-dom"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 import {
   LayoutDashboard,
   BarChart3,
@@ -18,6 +28,9 @@ import {
   ChevronRight,
   Home,
   Shield,
+  MoveRight,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react"
 
 import { cn } from "../lib/utils"
@@ -41,6 +54,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  useSidebar,
 } from "./ui/sidebar"
 import {
   LineChart,
@@ -140,6 +154,47 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
+function SearchInput() {
+  const { state } = useSidebar()
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (state === "expanded" && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus()
+      }, 100)
+    }
+  }, [state])
+  
+  return (
+    <div className="flex h-9 w-full">
+      <div className="flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-input bg-background px-3 py-1 text-sm ring-offset-background" >
+        <input
+          ref={inputRef}
+          placeholder="Search Parts RFID..."
+          type="text"
+          className="flex w-full bg-transparent p-1 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </div>
+      <Select>
+        <SelectTrigger className="w-[90px] rounded-l-none border-l-0">
+          <SelectValue placeholder="types" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Part Types</SelectLabel>
+            <SelectItem value="engine">Engine</SelectItem>
+            <SelectItem value="transmission">Transmission</SelectItem>
+            <SelectItem value="suspension">Suspension</SelectItem>
+            <SelectItem value="brakes">Brakes</SelectItem>
+            <SelectItem value="electrical">Electrical</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const location = useLocation()
   const [openMenus, setOpenMenus] = useState({
@@ -165,108 +220,33 @@ export default function Dashboard() {
           <SidebarHeader className="border-b px-4 py-3">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              <span className="font-semibold">TrustChain</span>
+              <span className="font-semibold md:hidden">TrustChain</span>
             </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className={"text-lg font-bold mt-4 justify-center"}>Search Part History</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
-                      <Link to="/dashboard">
-                        <Home className="h-4 w-4" />
-                        <span>Overview</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  {/* Analytics Menu */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => toggleMenu("analytics")} className="justify-between">
-                      <div className="flex items-center">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        <span>Analytics</span>
-                      </div>
-                      {openMenus.analytics ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </SidebarMenuButton>
-
-                    {openMenus.analytics && (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/performance">
-                              <LineChartIcon className="h-4 w-4" />
-                              <span>Performance</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/revenue">
-                              <CircleDollarSign className="h-4 w-4" />
-                              <span>Revenue</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/distribution">
-                              <PieChartIcon className="h-4 w-4" />
-                              <span>Distribution</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-
-                  {/* Management Menu */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => toggleMenu("management")} className="justify-between">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        <span>Management</span>
-                      </div>
-                      {openMenus.management ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </SidebarMenuButton>
-
-                    {openMenus.management && (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/users">
-                              <Users className="h-4 w-4" />
-                              <span>Users</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/reports">
-                              <FileText className="h-4 w-4" />
-                              <span>Reports</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/settings">
-                              <Settings className="h-4 w-4" />
-                              <span>Settings</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
+                <SearchInput />
+                <div className="flex items-center justify-between mt-4 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                  <div 
+                  className="search-result-item w-full hover:bg-muted border p-2 rounded-md"
+                  >
+                    <span className="text-sm">
+                      Product Name
+                    </span>
+                    <span className="text-xs text-muted-foreground mx-2">
+                      Type
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      Part Number
+                    </p>
+                    <a target="_blank" href="/catalog/123" className="cursor-pointer hover:text-purple-500">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+            </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
@@ -277,16 +257,18 @@ export default function Dashboard() {
           <div className="p-4 md:p-6 w-full">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
+                <SidebarTrigger className="" />
+              </div>
+              <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
                 <h1 className="text-3xl font-bold">Dashboard Overview</h1>
               </div>
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="md:hidden" />
+              <div className="w-20">
               </div>
             </div>
             {/* Recent Transactions Table */}
             {/* <TrustChainIOTReadings /> */}
-            <LiveBlock />
+            {/* <LiveBlock /> */}
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card className={"p-0 m-0 dark:bg-black"}>

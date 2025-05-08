@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react"
+import { ArrowLeftFromLine, PanelLeftIcon, Search, } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -25,10 +25,10 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH = "18rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
-const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const SIDEBAR_KEYBOARD_SHORTCUT = "/"
 
 const SidebarContext = React.createContext(null)
 
@@ -42,7 +42,7 @@ function useSidebar() {
 }
 
 function SidebarProvider({
-  defaultOpen = true,
+  defaultOpen = false,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -77,10 +77,7 @@ function SidebarProvider({
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
+      if (event.key === SIDEBAR_KEYBOARD_SHORTCUT) {
         event.preventDefault()
         toggleSidebar()
       }
@@ -225,23 +222,43 @@ function SidebarTrigger({
   onClick,
   ...props
 }) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, state, open } = useSidebar()
 
   return (
-    <Button
+    // <Button
+    //   data-sidebar="trigger"
+    //   data-slot="sidebar-trigger"
+    //   variant="ghost"
+    //   size="icon"
+    //   className={cn("size-10", className)}
+    //   onClick={(event) => {
+    //     onClick?.(event)
+    //     toggleSidebar()
+    //   }}
+    //   {...props}>
+    //   <Search className="scale-150" />
+    //   <span className="sr-only">Toggle Sidebar</span>
+    // </Button>
+    <div
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      className={"cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent/50 dark:hover:text-sidebar-accent-foreground/90 transition-colors rounded-full inline-flex p-2 font-semibold border border-zinc-500/60"}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}>
-      <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+        {state === "expanded" ? (
+          <ArrowLeftFromLine className="h-5 w-5" />
+        ) : (
+          <div className="flex items-center gap-2 mx-2">
+            <Search className="h-5 w-5" />
+            <span className="text-sm">Type <span className="border border-zinc-500/60 px-2 py-0.5 font-bold rounded">/</span> to Search</span>
+          </div>
+        )}
+    </div>
   );
 }
 
