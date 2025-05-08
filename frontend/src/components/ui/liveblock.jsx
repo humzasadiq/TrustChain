@@ -242,14 +242,14 @@ export default function ProductionLineAnimation() {
               </div>
               
               {/* Production Stages */}
-              <div className={`absolute z-2 bg-red-300/50 border-gray-300 top-1/2 left-[25%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S1")}`}>
-                S1
+              <div className={`absolute z-2 bg-red-300/50 border-gray-300 top-1/2 left-[25%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl font-bold ${getStageClass("S1")}`}>
+                Store
               </div>
-              <div className={`absolute z-2 bg-purple-300/50 top-1/2 left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S2")}`}>
-                S2
+              <div className={`absolute z-2 bg-purple-300/50 top-1/2 left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl font-bold ${getStageClass("S2")}`}>
+                Sub-Assembly
               </div>
-              <div className={`absolute z-2 bg-green-300/50 top-1/2 left-[75%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl sm:text-2xl font-bold ${getStageClass("S3")}`}>
-                S3
+              <div className={`absolute z-2 bg-green-300/50 top-1/2 left-[75%] transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 border rounded-lg flex items-start justify-center text-xl font-bold ${getStageClass("S3")}`}>
+                Design
               </div>
               
               {/* Car */}
