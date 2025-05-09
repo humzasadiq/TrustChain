@@ -1,7 +1,10 @@
 "use client"
 
 import { useState , useEffect, useRef } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import jobServices from "../services/api"
+
+import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -54,7 +57,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
-  useSidebar,
 } from "./ui/sidebar"
 import {
   LineChart,
@@ -154,48 +156,109 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
-function SearchInput() {
-  const { state } = useSidebar()
+function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchString }) {
   const inputRef = useRef(null)
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // useEffect(() => {
+  //   if (state === "expanded" && inputRef.current) {
+  //     setTimeout(() => {
+  //       inputRef.current.focus()
+  //     }, 100)
+  //   }
+  // }, [state])
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchString || !selectedMode) {
+      toast.error("Please enter a search term and select a mode");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (selectedMode === 'order') {
+        const result = await jobServices.fetchOrderById(searchString);
+        if (result) {
+          toast.success("Order found!");
+          navigate(`/order/${searchString}`, { 
+            state: { data: result } 
+          });
+        } else {
+          setError(`No order found with ID: ${searchString}`);
+        }
+      } else if (selectedMode === 'part') {
+        // Handle part search when API is ready
+        toast.error("Part search not implemented yet");
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error(`Error fetching ${selectedMode}:`, err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (state === "expanded" && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current.focus()
-      }, 100)
+    if (error) {
+      toast.error(error);
     }
-  }, [state])
+  }, [error]);
+
+  useEffect(() => {
+    if (isLoading) {
+      toast.loading("Searching...", {
+        id: "search-loading"
+      });
+    } else {
+      toast.dismiss("search-loading");
+    }
+  }, [isLoading]);
   
   return (
-    <div className="flex h-9 w-full">
-      <div className="flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-input bg-background px-3 py-1 text-sm ring-offset-background" >
-        <input
-          ref={inputRef}
-          placeholder="Search Parts RFID..."
-          type="text"
-          className="flex w-full bg-transparent p-1 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        />
-      </div>
-      <Select>
-        <SelectTrigger className="w-[90px] rounded-l-none border-l-0">
-          <SelectValue placeholder="types" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Part Types</SelectLabel>
-            <SelectItem value="engine">Engine</SelectItem>
-            <SelectItem value="transmission">Transmission</SelectItem>
-            <SelectItem value="suspension">Suspension</SelectItem>
-            <SelectItem value="brakes">Brakes</SelectItem>
-            <SelectItem value="electrical">Electrical</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+    <div className="space-y-2">
+      <form onSubmit={handleSearch} className="flex h-9 w-100">
+        <div className="flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background">
+          <input
+            ref={inputRef}
+            value={searchString}
+            onChange={(e) => setSearchString(e.target.value)}
+            placeholder={`Search ${selectedMode || 'Parts'} ID...`}
+            type="text"
+            disabled={isLoading}
+            className="flex w-full bg-transparent p-1 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
+        <Select 
+          value={selectedMode || 'part'}
+          onValueChange={setSelectedMode}
+          defaultValue="part"
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-[90px] rounded-l-none border-l-0 border border-gray-500">
+            <SelectValue placeholder="Mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Mode</SelectLabel>
+              <SelectItem value="part">Part</SelectItem>
+              <SelectItem value="order">Order</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </form>
+      
     </div>
   )
 }
 
 export default function Dashboard() {
+  const [selectedMode, setSelectedMode] = useState(null)
+  const [searchString, setSearchString] = useState("")
   const location = useLocation()
   const [openMenus, setOpenMenus] = useState({
     analytics: true,
@@ -214,61 +277,24 @@ export default function Dashboard() {
   }
 
   return (
-    <SidebarProvider>
+      <div>
       {/* <div className="flex h-screen w-full"> */}
-        <Sidebar className="border-r">
-          <SidebarHeader className="border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="font-semibold md:hidden">TrustChain</span>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className={"text-lg font-bold mt-4 justify-center"}>Search Part History</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SearchInput />
-                <div className="flex items-center justify-between mt-4 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-                  <div 
-                  className="search-result-item w-full hover:bg-muted border p-2 rounded-md"
-                  >
-                    <span className="text-sm">
-                      Product Name
-                    </span>
-                    <span className="text-xs text-muted-foreground mx-2">
-                      Type
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      Part Number
-                    </p>
-                    <a target="_blank" href="/catalog/123" className="cursor-pointer hover:text-purple-500">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-            </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           
           <div className="p-4 md:p-6 w-full">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="" />
-              </div>
+              
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
                 <h1 className="text-3xl font-bold">Dashboard Overview</h1>
               </div>
-              <div className="w-20">
-              </div>
+              <SearchInput selectedMode={selectedMode} setSelectedMode={setSelectedMode} searchString={searchString} setSearchString={setSearchString} />
             </div>
             {/* Recent Transactions Table */}
             {/* <TrustChainIOTReadings /> */}
-            {/* <LiveBlock /> */}
+            <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card className={"p-0 m-0 dark:bg-black"}>
@@ -406,6 +432,6 @@ export default function Dashboard() {
           </div>
         </div>
       {/* </div> */}
-    </SidebarProvider>
+      </div>
   )
 }

@@ -8,12 +8,15 @@ import Login from "./components/login"
 import Signup from "./components/signup"
 import "./App.css"
 import "./index.css"
-import ProductDetails from "./components/ProductDetails"
+import Details from "./components/Details"
 import ShowNavbar from "./components/showNavbar"
+import { Toaster } from "sonner"
+
 
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="trustchain-theme">
+      <Toaster />
       <Router>
         <div className="min-h-screen bg-background text-foreground font-sans antialiased">
           <ShowNavbar>
@@ -24,7 +27,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/catalog/:id" element={<ProductDetails/>} />
+            <Route path="/part/:id" element={<Details type="part" />} />
+            <Route path="/order/:id" element={<Details type="order" />} />
           </Routes>
         </div>
       </Router>
