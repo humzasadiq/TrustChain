@@ -205,6 +205,30 @@ const getOrder = async (uid) => {
   return data.order_id ;
 };
 
+// Fetch item info from rfid_items table
+async function getItemInfo(uid) {
+  const { data, error } = await supabase
+    .from('rfid_items')
+    .select('*')
+    .eq('uid', uid)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// Fetch related order info from order_items table
+async function getItemOrderInfo(uid) {
+  const { data, error } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('item_uid', uid)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 const getOrders = async() =>{
   const { data, error } = await supabase
   .from('orders')
@@ -220,4 +244,15 @@ const getOrders = async() =>{
   
   return data;
 }
-module.exports = { logToSupabase, updateItemLocation, logToOrderItems, signup, login, getOrder, getItemsForOrder, getOrders };
+module.exports = { 
+    logToSupabase, 
+    updateItemLocation, 
+    logToOrderItems, 
+    signup, 
+    login, 
+    getOrder, 
+    getItemsForOrder, 
+    getOrders, 
+    getItemInfo,
+    getItemOrderInfo,
+  };

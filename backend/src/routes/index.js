@@ -4,6 +4,8 @@ const { handleStage } = require('../controllers/handleStageEntry');
 const { getOrderID, getOrderItems, getAllOrders } = require('../controllers/handleOrder');
 const { logInUser, signUpUser } = require('../controllers/auth');
 const { body } = require('express-validator');
+const { getItem } = require('../controllers/handleItem');
+router.post('/get-item', getItem);
 
 
 router.post('/stage-event', handleStage);
