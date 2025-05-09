@@ -162,14 +162,6 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // useEffect(() => {
-  //   if (state === "expanded" && inputRef.current) {
-  //     setTimeout(() => {
-  //       inputRef.current.focus()
-  //     }, 100)
-  //   }
-  // }, [state])
-
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchString || !selectedMode) {
@@ -185,14 +177,11 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
         const result = await jobServices.fetchOrderById(searchString);
         if (result) {
           toast.success("Order found!");
-          navigate(`/order/${searchString}`, { 
-            state: { data: result } 
-          });
+          window.open(`/order/${searchString}`, '_blank', 'noopener,noreferrer');
         } else {
           setError(`No order found with ID: ${searchString}`);
         }
       } else if (selectedMode === 'part') {
-        // Handle part search when API is ready
         toast.error("Part search not implemented yet");
       }
     } catch (err) {
