@@ -93,6 +93,17 @@ export default function Navbar() {
               <Info className="h-4 w-4" />
               About
             </Link>
+
+            <Link
+              to="/sad"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/about") && "text-primary",
+              )}
+            >
+              <Info className="h-4 w-4" />
+              Order
+            </Link>
           </nav>
         </div>
 
