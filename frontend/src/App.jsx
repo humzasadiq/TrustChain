@@ -3,15 +3,17 @@ import { ThemeProvider } from "./components/theme-provider"
 import Navbar from "./components/navbar"
 import Home from "./components/home"
 import Dashboard from "./components/dashboard"
-// import Random from "./components/random"
 import Login from "./components/login"
 import Signup from "./components/signup"
+import About from "./components/about"
+
 import "./App.css"
 import "./index.css"
 import Details from "./components/Details"
 import ShowNavbar from "./components/showNavbar"
 import { Toaster } from "sonner"
-
+import Logging from "./components/logging"
+import Order from "./components/order"
 
 function App() {
   return (
@@ -27,6 +29,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/logs" element={<Logging />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/sad" element={<Order />} />
             <Route path="/part/:id" element={<Details type="part" />} />
             <Route path="/order/:id" element={<Details type="order" />} />
           </Routes>

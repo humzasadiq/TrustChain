@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Shield, LayoutDashboard, LogIn, Menu, X, History } from 'lucide-react'
+import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers } from "lucide-react"
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
@@ -10,6 +10,26 @@ import { ThemeToggle } from "./theme-toggle"
 export default function Navbar() {
   const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  // Add scroll event listener to track when page is scrolled
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+
+    // Add event listener
+    window.addEventListener('scroll', handleScroll)
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -20,11 +40,22 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center px-4 md:px-6">
+    <header 
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 w-full border-b transition-all duration-300",
+        isScrolled 
+          ? "bg-background/40 backdrop-blur-lg" 
+          : "bg-background/95 backdrop-blur-sm"
+      )}
+    >
+      <div className={cn(
+        "flex h-16 items-center px-4 md:px-6 transition-all duration-300",
+        isScrolled 
+          ? "bg-transparent" 
+          : "bg-[#E7FFFE] dark:bg-black"
+      )}>
         {/* Logo - Left aligned */}
         <Link to="/" className="flex items-center gap-2 mr-4">
-          {/* <Shield className="h-6 w-6" /> */}
           <img src="/logo.svg" alt="TrustChain" className="h-10 w-10 dark:invert" />
           <span className="text-xl font-bold">TrustChain</span>
         </Link>
@@ -43,14 +74,35 @@ export default function Navbar() {
               Dashboard
             </Link>
             <Link
-              to="/random"
+              to="/logs"
               className={cn(
                 "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
-                isActive("/random") && "text-primary",
+                isActive("/logs") && "text-primary",
               )}
             >
-              <History className="h-4 w-4" />
+              <Layers className="h-4 w-4" />
               Logs
+            </Link>
+            <Link
+              to="/about"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/about") && "text-primary",
+              )}
+            >
+              <Info className="h-4 w-4" />
+              About
+            </Link>
+
+            <Link
+              to="/sad"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/about") && "text-primary",
+              )}
+            >
+              <Info className="h-4 w-4" />
+              Order
             </Link>
           </nav>
         </div>
@@ -76,7 +128,7 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="absolute top-16 left-0 right-0 bg-background border-b p-4 flex flex-col gap-4 md:hidden">
+          <div className="absolute top-16 left-0 right-0 bg-background/90 backdrop-blur-md border-b p-4 flex flex-col gap-4 md:hidden">
             <Link
               to="/dashboard"
               className={cn(
@@ -89,12 +141,20 @@ export default function Navbar() {
               Dashboard
             </Link>
             <Link
-              to="/random"
-              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/random") && "bg-muted")}
+              to="/logs"
+              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/logs") && "bg-muted")}
               onClick={toggleMenu}
             >
               <History className="h-5 w-5" />
-              Random
+              Logs
+            </Link>
+            <Link
+              to="/about"
+              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/about") && "bg-muted")}
+              onClick={toggleMenu}
+            >
+              <Info className="h-5 w-5" />
+              About
             </Link>
             <div className="flex flex-col gap-2 pt-2 border-t">
               <div className="p-2">
@@ -116,4 +176,3 @@ export default function Navbar() {
     </header>
   )
 }
-

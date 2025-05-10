@@ -35,6 +35,7 @@ import {
   ArrowRight,
   ExternalLink,
   Search,
+  ShieldCheck
 } from "lucide-react"
 
 import { cn } from "../lib/utils"
@@ -255,7 +256,7 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 pt-30 bg-[#F2FDFF] dark:bg-primary/0.5">
       <form onSubmit={handleSearch} className="flex h-9 w-100">
         <div className={`flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background relative`}>
           <input
@@ -335,10 +336,10 @@ export default function Dashboard() {
       {/* <div className="flex h-screen w-full"> */}
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F2FDFF] dark:bg-primary/2">
           
           <div className="p-4 md:p-6 w-full">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 ">
               
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
@@ -421,7 +422,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader>
                   <CardTitle>Distribution by Type</CardTitle>
                   <CardDescription>Transaction types breakdown</CardDescription>

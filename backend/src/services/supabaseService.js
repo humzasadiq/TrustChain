@@ -24,9 +24,8 @@ const logToOrderItems = async (oid, uid, stage) => {
     const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
 
     const { data: orderData, error } = await supabase.from('orders').select('car_rfid').eq('car_rfid', uid).single();
-    console.log(orderData);
-    if(orderData){
-      return { message: "It is RFID of an order"};
+    if (orderData) {
+      return { success: false, message: "It is RFID of an order" };
     }
 
     const { data, error: insertError } = await supabase.from('order_items').insert([
@@ -52,7 +51,22 @@ const logToOrderItems = async (oid, uid, stage) => {
   }
 };
 
+const handleTransactionAddressForItem = async (item_uid, transaction_address) => {
+  try {
+    const { data, error } = await supabase
+      .from('order_items')
+      .update({ transaction_address })
+      .eq('item_uid', item_uid);
 
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, message: 'Server error', error: err.message };
+  }
+};
 const updateItemLocation = async (uid, stage, action) => {
   const { data: existing, error: findError } = await supabase
     .from('item_location')
@@ -202,7 +216,7 @@ const getOrder = async (uid) => {
   }
 
 
-  return data.order_id ;
+  return data.order_id;
 };
 
 // Fetch item info from rfid_items table
@@ -229,30 +243,92 @@ async function getItemOrderInfo(uid) {
   return data;
 }
 
-const getOrders = async() =>{
+const getOrders = async () => {
   const { data, error } = await supabase
-  .from('orders')
-  .select("*")
+    .from('orders')
+    .select("*")
 
-  if (error){
+  if (error) {
     throw new Error('Error fetching orders')
   }
 
-  if (!data){
+  if (!data) {
     throw new Error('No Orders Found')
   }
-  
+
   return data;
 }
-module.exports = { 
-    logToSupabase, 
-    updateItemLocation, 
-    logToOrderItems, 
-    signup, 
-    login, 
-    getOrder, 
-    getItemsForOrder, 
-    getOrders, 
-    getItemInfo,
-    getItemOrderInfo,
-  };
+
+
+const orderCreation = async (name, car_rfid, description) => {
+  const { data: rfidItem, error: rfidError } = await supabase
+    .from('rfid_items')
+    .select('*')
+    .eq('uid', car_rfid)
+    .single();
+
+  if (rfidError && rfidError.code !== 'PGRST116') {
+    return { error: 'Error querying rfid_items', details: rfidError };
+  }
+
+  // If car_rfid not in rfid_items, insert it
+  if (!rfidItem) {
+    const { error: insertError } = await supabase
+      .from('rfid_items')
+      .insert({ uid: car_rfid, name, description });
+
+    if (insertError) {
+      return { error: 'Error inserting into rfid_items', details: insertError };
+    }
+  }
+
+  // Check if car_rfid is already part of an order_item
+  const { data: itemMatch } = await supabase
+    .from('order_items')
+    .select('item_uid')
+    .eq('item_uid', car_rfid)
+    .maybeSingle();
+
+  if (itemMatch) {
+    return { error: 'This item is a part and cannot be used as an order' };
+  }
+
+  // Check if order already exists
+  const { data: orderMatch } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('car_rfid', car_rfid)
+    .maybeSingle();
+
+  if (orderMatch) {
+    return { error: 'Order already exists for this RFID' };
+  }
+
+  // Create new order
+  const karachiTime = DateTime.now().setZone('Asia/Karachi');
+  const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
+  const { error: orderInsertError } = await supabase
+    .from('orders')
+    .insert({ car_rfid, name, description, status: "incomplete", created_at: formattedDate });
+
+  if (orderInsertError) {
+    return { error: 'Error inserting into orders', details: orderInsertError };
+  }
+
+  return { success: true, message: 'Order created successfully' };
+}
+
+module.exports = {
+  logToSupabase,
+  updateItemLocation,
+  logToOrderItems,
+  handleTransactionAddressForItem,
+  signup,
+  login,
+  getOrder,
+  getItemsForOrder,
+  getOrders,
+  getItemInfo,
+  getItemOrderInfo,
+  orderCreation
+};
