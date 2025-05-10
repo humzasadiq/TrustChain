@@ -1,6 +1,6 @@
 "use client"
 
-import { useState , useEffect, useRef } from "react"
+import { useState , useEffect, useRef, use } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import jobServices from "../services/api"
 
@@ -34,6 +34,7 @@ import {
   MoveRight,
   ArrowRight,
   ExternalLink,
+  Search,
 } from "lucide-react"
 
 import { cn } from "../lib/utils"
@@ -74,6 +75,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { Button } from "./ui/button"
 
 
 // Sample data for charts
@@ -143,6 +145,8 @@ const recentTransactions = [
   },
 ]
 
+const SIDEBAR_KEYBOARD_SHORTCUT = "/"
+
 // Custom tooltip component for charts
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -161,6 +165,23 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showHint, setShowHint] = useState(true) // Add state for hint visibility
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const activeElement = document.activeElement;
+      const isInputActive = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement;
+
+      if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && !isInputActive) {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -213,28 +234,61 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
       toast.dismiss("search-loading");
     }
   }, [isLoading]);
-  
+
+  const isInputActive = useRef(false);
+
+  useEffect(() => {
+    const activeElement = document.activeElement;
+    const isInputActive = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement;
+  },[]);
+
+  // Add focus handlers
+  const handleFocus = () => {
+    setShowHint(false)
+  }
+
+  const handleBlur = () => {
+    setShowHint(true)
+  }
+
   return (
     <div className="space-y-2">
       <form onSubmit={handleSearch} className="flex h-9 w-100">
-        <div className="flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background">
+        <div className={`flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background relative`}>
           <input
             ref={inputRef}
             value={searchString}
             onChange={(e) => setSearchString(e.target.value)}
-            placeholder={`Search ${selectedMode || 'Parts'} ID...`}
+            placeholder=""
             type="text"
             disabled={isLoading}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             className="flex w-full bg-transparent p-1 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
+          {showHint && !searchString && (
+            <div
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none select-none text-muted-foreground"
+              style={{ zIndex: 1 }}
+            >
+              <span>
+                Type{" "}
+                <span className="border border-zinc-500/60 px-2 py-0.5 font-bold rounded">
+                  /
+                </span>{" "}
+                to {selectedMode === "part" ? "Search Part" : "Search Order"}
+              </span>
+            </div>
+          )}
         </div>
-        <Select 
-          value={selectedMode || 'part'}
+        <Select
+          value={selectedMode || "part"}
           onValueChange={setSelectedMode}
           defaultValue="part"
           disabled={isLoading}
         >
-          <SelectTrigger className="w-[90px] rounded-l-none border-l-0 border border-gray-500">
+          <SelectTrigger className="w-[90px] rounded-l-none border-l-0 rounded-r-none border border-gray-500">
             <SelectValue placeholder="Mode" />
           </SelectTrigger>
           <SelectContent>
@@ -245,8 +299,11 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
             </SelectGroup>
           </SelectContent>
         </Select>
+        <Button className={"rounded-l-none border-l-0 border border-gray-500"} onClick={handleSearch}>
+          <Search className="h-4 w-4 mr-2" />
+          {isLoading ? "Searching..." : "Search"}
+        </Button>
       </form>
-      
     </div>
   )
 }
