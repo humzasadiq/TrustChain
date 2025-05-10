@@ -182,7 +182,13 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
           setError(`No order found with ID: ${searchString}`);
         }
       } else if (selectedMode === 'part') {
-        toast.error("Part search not implemented yet");
+        const result = await jobServices.fetchPartById(searchString);
+        if (result) {
+          toast.success("Part found!");
+          window.open(`/part/${searchString}`, '_blank', 'noopener,noreferrer');
+        } else {
+          setError(`No part found with ID: ${searchString}`);
+        }
       }
     } catch (err) {
       setError(err.message);
