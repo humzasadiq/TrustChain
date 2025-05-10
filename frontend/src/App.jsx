@@ -13,6 +13,7 @@ import Details from "./components/Details"
 import ShowNavbar from "./components/showNavbar"
 import { Toaster } from "sonner"
 import Logging from "./components/logging"
+import Order from "./components/order"
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/logs" element={<Logging />} />
             <Route path="/about" element={<About />} />
+            <Route path="/sad" element={<Order />} />
             <Route path="/part/:id" element={<Details type="part" />} />
             <Route path="/order/:id" element={<Details type="order" />} />
           </Routes>
