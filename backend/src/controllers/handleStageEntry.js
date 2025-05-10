@@ -8,7 +8,6 @@ const handleStage = async (req, res) => {
 
     const itemLocationResult = await updateItemLocation(uid, stage, action);
     const blockchainTx = await logToBlockchain(uid, stage, status);
-    console.log(blockchainTx)
     const dbResult = await logToSupabase(uid, stage, status, blockchainTx);
 
     if (order_id != '') {
@@ -17,14 +16,13 @@ const handleStage = async (req, res) => {
       if (orderItemsResult.success) {
         const itemTx = await logItemToChain(order_id, uid, stage)
         const orderItemTxDatabase = await handleTransactionAddressForItem(uid, itemTx)
-        return res.json({orderItemsResult, itemTx, orderItemTxDatabase});
+        return res.json({ orderItemsResult, itemTx, orderItemTxDatabase, itemLocationResult, dbResult});
 
       }
-      return res.json(orderItemsResult);
+      return res.json({ orderItemsResult, itemLocationResult, dbResult });
 
     }
 
-    // res.json({ success: true, dbResult, blockchainTx, itemLocationResult  });
     return res.json({ success: true });
   } catch (err) {
     console.error(err);

@@ -1,4 +1,4 @@
-const { getOrder, getItemsForOrder, getOrders } = require('../services/supabaseService');
+const { getOrder, getItemsForOrder, getOrders, orderCreation } = require('../services/supabaseService');
 
 const getOrderItems = async (req, res) => {
   try {
@@ -25,7 +25,7 @@ const getOrderItems = async (req, res) => {
   }
 };
 
-const getOrderID = async(req, res) =>{
+const getOrderID = async (req, res) => {
   try {
     const { uid } = req.body;
 
@@ -49,7 +49,7 @@ const getOrderID = async(req, res) =>{
 
 }
 
-const getAllOrders = async(req, res) =>{
+const getAllOrders = async (req, res) => {
   try {
     const orders = await getOrders();
     return res.status(200).json({
@@ -63,8 +63,28 @@ const getAllOrders = async(req, res) =>{
       message: err.message
     });
   }
-
-
 }
 
-module.exports = { getOrderID, getOrderItems, getAllOrders };
+const createOrder = async (req, res) => {
+  const { name, car_rfid, description } = req.body;
+
+  if (!name || !car_rfid || !description) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const orders = await orderCreation(name, car_rfid, description);
+    return res.status(200).json({
+      success: true,
+      orders
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+module.exports = { getOrderID, getOrderItems, getAllOrders, createOrder };
