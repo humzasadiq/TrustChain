@@ -24,13 +24,8 @@ const logToOrderItems = async (oid, uid, stage) => {
     const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
 
     const { data: orderData, error } = await supabase.from('orders').select('car_rfid').eq('car_rfid', uid).single();
-    console.log(orderData);
-    if(orderData){
-      return { success: false, message: "It is RFID of an order"};
-    }
-
-    if(error){
-      return { success: false, message: "This item is not registered in the database"}
+    if (orderData) {
+      return { success: false, message: "It is RFID of an order" };
     }
 
     const { data, error: insertError } = await supabase.from('order_items').insert([
@@ -56,7 +51,22 @@ const logToOrderItems = async (oid, uid, stage) => {
   }
 };
 
+const handleTransactionAddressForItem = async (item_uid, transaction_address) => {
+  try {
+    const { data, error } = await supabase
+      .from('order_items')
+      .update({ transaction_address })
+      .eq('item_uid', item_uid);
 
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, message: 'Server error', error: err.message };
+  }
+};
 const updateItemLocation = async (uid, stage, action) => {
   const { data: existing, error: findError } = await supabase
     .from('item_location')
@@ -206,7 +216,7 @@ const getOrder = async (uid) => {
   }
 
 
-  return data.order_id ;
+  return data.order_id;
 };
 
 // Fetch item info from rfid_items table
@@ -233,30 +243,31 @@ async function getItemOrderInfo(uid) {
   return data;
 }
 
-const getOrders = async() =>{
+const getOrders = async () => {
   const { data, error } = await supabase
-  .from('orders')
-  .select("*")
+    .from('orders')
+    .select("*")
 
-  if (error){
+  if (error) {
     throw new Error('Error fetching orders')
   }
 
-  if (!data){
+  if (!data) {
     throw new Error('No Orders Found')
   }
-  
+
   return data;
 }
-module.exports = { 
-    logToSupabase, 
-    updateItemLocation, 
-    logToOrderItems, 
-    signup, 
-    login, 
-    getOrder, 
-    getItemsForOrder, 
-    getOrders, 
-    getItemInfo,
-    getItemOrderInfo,
-  };
+module.exports = {
+  logToSupabase,
+  updateItemLocation,
+  logToOrderItems,
+  handleTransactionAddressForItem,
+  signup,
+  login,
+  getOrder,
+  getItemsForOrder,
+  getOrders,
+  getItemInfo,
+  getItemOrderInfo,
+};

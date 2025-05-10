@@ -1,5 +1,5 @@
-const { logToSupabase, updateItemLocation, logToOrderItems } = require('../services/supabaseService');
-const { logToBlockchain } = require('../services/blockchainService');
+const { logToSupabase, updateItemLocation, logToOrderItems, handleTransactionAddressForItem } = require('../services/supabaseService');
+const { logToBlockchain, logItemToChain } = require('../services/blockchainService');
 
 const handleStage = async (req, res) => {
   try {
@@ -7,19 +7,25 @@ const handleStage = async (req, res) => {
     const status = action === 'entry' ? 'Present' : 'Left';
 
     const itemLocationResult = await updateItemLocation(uid, stage, action);
-    // const blockchainTx = await logToBlockchain(uid, stage, status);
-    // const dbResult = await logToSupabase(uid, stage, status, blockchainTx);
-    const dbResult = await logToSupabase(uid, stage, status, 'abc');
+    const blockchainTx = await logToBlockchain(uid, stage, status);
+    console.log(blockchainTx)
+    const dbResult = await logToSupabase(uid, stage, status, blockchainTx);
 
-    if(order_id != ''){
+    if (order_id != '') {
       const orderItemsResult = await logToOrderItems(order_id, uid, stage);
       // res.json({ success: true, dbResult, blockchainTx, itemLocationResult, orderItemsResult  });
+      if (orderItemsResult.success) {
+        const itemTx = await logItemToChain(order_id, uid, stage)
+        const orderItemTxDatabase = await handleTransactionAddressForItem(uid, itemTx)
+        return res.json({orderItemsResult, itemTx, orderItemTxDatabase});
+
+      }
       return res.json(orderItemsResult);
-      
+
     }
 
     // res.json({ success: true, dbResult, blockchainTx, itemLocationResult  });
-     return res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error logging event');
