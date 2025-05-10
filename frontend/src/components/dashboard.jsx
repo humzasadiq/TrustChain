@@ -76,6 +76,8 @@ import {
 } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Button } from "./ui/button"
+import IPStatusMonitor from "./IpStatusMonitor"
+import CountTransactions from "./CountTransactions"
 
 
 // Sample data for charts
@@ -349,29 +351,15 @@ export default function Dashboard() {
             <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className={"p-0 m-0 dark:bg-black"}>
+            {/* <Card className={"p-0 m-0 dark:bg-black"}>
                 <CardContent>
                   <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0 " />
                 </CardContent>
-              </Card>
+              </Card> */}
+              <IPStatusMonitor/>
               
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Transactions</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">432</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      +8.2%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
+              <CountTransactions/>
+              {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Revenue</CardTitle>
                   <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
@@ -386,8 +374,9 @@ export default function Dashboard() {
                     from last month
                   </p>
                 </CardContent>
-              </Card>
-              <Card>
+              </Card> */}
+
+              {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
@@ -402,11 +391,11 @@ export default function Dashboard() {
                     from last month
                   </p>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
 
             {/* Charts */}
-            <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
+            {/* <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Transaction Overview</CardTitle>
@@ -459,10 +448,10 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
 
             {/* Weekly Activity Bar Chart */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Weekly Activity</CardTitle>
@@ -480,7 +469,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
           </div>
         </div>
       {/* </div> */}
