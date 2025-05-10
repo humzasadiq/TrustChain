@@ -210,7 +210,7 @@ export default function ProductionLineAnimation() {
 
   return (
     <div className="mb-6">
-      <Card className="flex flex-col">
+      <Card className="flex flex-col bg-[#E7FFFE] dark:bg-primary/5">
         <CardHeader className="border-b">
           <div className="flex justify-between items-center">
             <div>
@@ -275,16 +275,16 @@ export default function ProductionLineAnimation() {
           </div>
           
           {/* Transaction Table */}
-          <div className="h-[calc(100vh-500px)] overflow-hidden">
+          <div className="h-[calc(100vh-500px)] overflow-hidden ">
             <div className="h-full overflow-auto">
               <Table className="relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="w-[200px]">Stage</TableHead>
-                    <TableHead className="w-[150px]">Status</TableHead>
-                    <TableHead className="w-[150px]">RFID Tag</TableHead>
-                    <TableHead className="w-[150px]">Car Part</TableHead>
-                    <TableHead className="w-[200px]">Timestamp</TableHead>
+                    <TableHead className="w-[200px] bg-slate-200 dark:bg-primary/5">Stage</TableHead>
+                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">Status</TableHead>
+                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">RFID Tag</TableHead>
+                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">Car Part</TableHead>
+                    <TableHead className="w-[200px] bg-slate-200 dark:bg-primary/5">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -6,9 +6,9 @@ import { Link } from "react-router-dom"
 
 export default function Signup() {
   return (
-    <div className="flex items-center justify-center h-screen w-full overflow-hidden">
+    <div className="flex items-center justify-center h-screen w-full overflow-hidden bg-[#F2FDFF] dark:bg-primary/2">
       <div className="mx-auto max-w-sm w-full px-4">
-        <div className="border p-6 rounded-lg shadow-sm space-y-4">
+        <div className="border p-6 rounded-lg shadow-sm space-y-4 bg-[#E7FFFE] dark:bg-primary/5">
           <div className="space-y-2 text-center">
             <UserPlus className="mx-auto h-6 w-6" />
             <h1 className="text-2xl font-bold">Sign Up</h1>
@@ -16,16 +16,20 @@ export default function Signup() {
           </div>
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="John Doe" required />
+              <Label htmlFor="name">First Name</Label>
+              <Input id="name" placeholder="John" required className="bg-[#F2FDFF]"/>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Last Name</Label>
+              <Input id="name" placeholder="Doe" required className="bg-[#F2FDFF]"/>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" placeholder="name@example.com" required type="email" />
+              <Input id="email" placeholder="name@example.com" required type="email" className="bg-[#F2FDFF]"/>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" required type="password" />
+              <Input id="password" required type="password" className="bg-[#F2FDFF]"/>
             </div>
             <Button className="w-full mt-2">
               <UserPlus className="mr-2 h-4 w-4" />

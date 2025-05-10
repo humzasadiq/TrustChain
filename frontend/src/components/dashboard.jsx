@@ -220,7 +220,7 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   }, [isLoading]);
   
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 pt-30 bg-[#F2FDFF] dark:bg-primary/0.5">
       <form onSubmit={handleSearch} className="flex h-9 w-100">
         <div className="flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background">
           <input
@@ -281,10 +281,10 @@ export default function Dashboard() {
       {/* <div className="flex h-screen w-full"> */}
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F2FDFF] dark:bg-primary/2">
           
           <div className="p-4 md:p-6 w-full">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 ">
               
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
@@ -297,13 +297,13 @@ export default function Dashboard() {
             <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className={"p-0 m-0 dark:bg-black"}>
+            <Card className={"p-0 m-0 dark:bg-black "}>
                 <CardContent>
                   <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0 " />
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Transactions</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
@@ -318,8 +318,8 @@ export default function Dashboard() {
                     from last month
                   </p>
                 </CardContent>
-              </Card>
-              <Card>
+              </Card > 
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Revenue</CardTitle>
                   <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
@@ -335,7 +335,7 @@ export default function Dashboard() {
                   </p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
@@ -355,7 +355,7 @@ export default function Dashboard() {
 
             {/* Charts */}
             <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader>
                   <CardTitle>Transaction Overview</CardTitle>
                   <CardDescription>Transaction volume over the last 30 days</CardDescription>
@@ -380,7 +380,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader>
                   <CardTitle>Distribution by Type</CardTitle>
                   <CardDescription>Transaction types breakdown</CardDescription>
@@ -411,7 +411,7 @@ export default function Dashboard() {
 
             {/* Weekly Activity Bar Chart */}
             <div className="mt-6">
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader>
                   <CardTitle>Weekly Activity</CardTitle>
                   <CardDescription>Transaction activity by day of week</CardDescription>
