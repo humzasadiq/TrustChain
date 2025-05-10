@@ -1,7 +1,7 @@
 "use client"
 
 import { Link } from "react-router-dom"
-import { LayoutDashboard } from "lucide-react"
+import { LayoutDashboard , ShieldCheck } from "lucide-react"
 import { Button } from "./ui/button"
 import wave1 from "../wave1.png"
 import { useState, useEffect } from "react"
@@ -42,6 +42,7 @@ export default function Home() {
   }, [])
 
   return (
+    <>
     <div className="flex min-h-screen relative overflow-hidden dark:bg-background bg-background bg-[#F2FDFF] dark:bg-primary/2">
       {/* Left side content */}
       <div className="flex-1 flex flex-col justify-center px-4 md:px-12 lg:px-20 z-10 bg-[#F2FDFF] dark:bg-primary/2">
@@ -76,7 +77,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-
+              
       {/* Right side image */}
       <div className="hidden md:block md:w-1/2 lg:w-[45%] relative bg-[#F2FDFF] dark:bg-primary/2">
         <div
@@ -87,7 +88,10 @@ export default function Home() {
             backgroundPosition: "center right",
           }}
         />
+        
       </div>
     </div>
+
+      </>
   )
 }
