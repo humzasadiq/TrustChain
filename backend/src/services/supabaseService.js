@@ -26,7 +26,11 @@ const logToOrderItems = async (oid, uid, stage) => {
     const { data: orderData, error } = await supabase.from('orders').select('car_rfid').eq('car_rfid', uid).single();
     console.log(orderData);
     if(orderData){
-      return { message: "It is RFID of an order"};
+      return { success: false, message: "It is RFID of an order"};
+    }
+
+    if(error){
+      return { success: false, message: "This item is not registered in the database"}
     }
 
     const { data, error: insertError } = await supabase.from('order_items').insert([

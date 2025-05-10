@@ -14,7 +14,7 @@ const handleStage = async (req, res) => {
     if(order_id != ''){
       const orderItemsResult = await logToOrderItems(order_id, uid, stage);
       // res.json({ success: true, dbResult, blockchainTx, itemLocationResult, orderItemsResult  });
-      return res.json({ success: true });
+      return res.json(orderItemsResult);
       
     }
 
