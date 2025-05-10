@@ -19,6 +19,7 @@ import {
   FileText,
   FileIcon as FilePdf,
   FileJson,
+  ShieldCheck
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -549,6 +550,20 @@ export default function Logging() {
         </Card>
       </div>
 </div>
+          <footer className="bg-[#F2FDFF] dark:bg-primary/5 py-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="flex items-center mb-4 sm:mb-0">
+              <ShieldCheck className="h-5 w-5 text-primary mr-2" />
+              <span className="text-sm font-medium">TrustChain</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} TrustChain. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+
       <style jsx global>{`
         @keyframes flash {
           0%, 100% { background-color: inherit; }

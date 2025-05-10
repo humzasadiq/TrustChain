@@ -85,7 +85,7 @@ export default function Order() {
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center mb-4 sm:mb-0">
               <ShieldCheck className="h-5 w-5 text-primary mr-2" />
-              <span className="text-sm font-medium">TrustChain Vehicle Registration</span>
+              <span className="text-sm font-medium">TrustChain</span>
             </div>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} TrustChain. All rights reserved.
