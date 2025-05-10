@@ -40,11 +40,25 @@ const fetchOrderById = async (orderId) => {
 
 const fetchPartById = async (partId) => {
   try {
-    const response = await axios.post(`${baseUrl}/get-item`, { id: partId });
+    const response = await axios.post(`${baseUrl}/get-item`, {
+      uid: partId
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message);
+    }
+
+    // Return the whole response as it contains both part and order info
     return response.data;
   } catch (error) {
-    console.error('Error fetching part:', error);
-    throw error;
+    if (error.response?.status === 404) {
+      return null;
+    }
+    // Handle network errors specifically
+    if (error.code === "ERR_NETWORK") {
+      throw new Error("Unable to connect to server. Please check your connection or try again later.");
+    }
+    throw new Error(error.response?.data?.message || error.message);
   }
 };
 

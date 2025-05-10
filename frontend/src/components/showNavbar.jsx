@@ -9,7 +9,7 @@ export default function ShowNavbar({children}) {
   const [showNavbar, setShowNavbar] = useState(true)
 
   useEffect(() => {
-    if (location.pathname.includes("catalog")) {
+    if ((location.pathname.includes("order"))||(location.pathname.includes("part"))) {
       setShowNavbar(false)
     }
     else {
