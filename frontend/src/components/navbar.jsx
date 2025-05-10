@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers } from "lucide-react"
+import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront } from "lucide-react"
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
@@ -84,6 +84,16 @@ export default function Navbar() {
               Logs
             </Link>
             <Link
+              to="/sad"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/about") && "text-primary",
+              )}
+            >
+              <CarFront className="h-4 w-4" />
+              Order
+            </Link>
+            <Link
               to="/about"
               className={cn(
                 "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
@@ -92,17 +102,6 @@ export default function Navbar() {
             >
               <Info className="h-4 w-4" />
               About
-            </Link>
-
-            <Link
-              to="/sad"
-              className={cn(
-                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
-                isActive("/about") && "text-primary",
-              )}
-            >
-              <Info className="h-4 w-4" />
-              Order
             </Link>
           </nav>
         </div>
