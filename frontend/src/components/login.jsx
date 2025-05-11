@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import SignInWithGoogleButton from "./ui/signinGoogle";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,18 +16,6 @@ export default function Login() {
   const location = useLocation();
   const { login } = useAuth();
 
-  // Check if there's an error from Google auth
-  useState(() => {
-    const params = new URLSearchParams(location.search);
-    const errorMsg = params.get("error");
-    
-    if (errorMsg === "google_auth_failed") {
-      setError("Google authentication failed. Please try again.");
-    } else if (errorMsg === "google_auth_error") {
-      setError("Error connecting to Google. Please try again later.");
-    }
-  }, [location]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -38,8 +25,12 @@ export default function Login() {
       const result = await login(email, password);
       
       if (result.success) {
-        // Redirect to dashboard or intended page
-        navigate("/dashboard");
+        console.log("Login successful, navigating to dashboard...");
+        
+        // Add a slightly longer delay to ensure token is properly set
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 300);
       } else {
         setError(result.message || "Login failed");
       }
@@ -102,7 +93,6 @@ export default function Login() {
                   </>
                 )}
               </Button>
-              <SignInWithGoogleButton />
             </form>
             <div className="text-center text-sm pt-2">
               Don't have an account?{" "}

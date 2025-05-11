@@ -1,20 +1,34 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
 
 const ProtectedRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { token, loading } = useAuth();
+  const [isReady, setIsReady] = useState(false);
   
-  console.log('ProtectedRoute - loading:', loading, 'isAuthenticated:', isAuthenticated());
+  // Add an effect to ensure token is properly loaded from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    console.log('ProtectedRoute - storedToken from localStorage:', Boolean(storedToken));
+    console.log('ProtectedRoute - token from context:', Boolean(token));
+    
+    // Set isReady to true once we've checked both sources
+    setIsReady(true);
+  }, [token]);
   
-  if (loading) {
+  if (loading || !isReady) {
     return <div>Loading...</div>;
   }
   
-  if (!isAuthenticated()) {
-    console.log('Redirecting to login');
+  // Use localStorage as backup if token isn't in context
+  const hasToken = Boolean(token || localStorage.getItem('token'));
+  
+  if (!hasToken) {
+    console.log('Redirecting to login - no valid token found');
     return <Navigate to="/login" replace />;
   }
   
+  console.log('Rendering protected route content');
   return <Outlet />;
 };
 

@@ -30,6 +30,7 @@ function App() {
           </ShowNavbar>
           <Toaster richColors />
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -37,15 +38,15 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
-            {/* Protected routes */}
+            {/* All protected routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/details" element={<Details />} />
-              <Route path="/logging" element={<Logging />} />
-              <Route path="/order" element={<Order />} />
+              
+              <Route path="/part/:id" element={<Details type="part" />} />
+              <Route path="/order/:id" element={<Details type="order" />} />
+              <Route path="/logs" element={<Logging />} />
+              <Route path="/sad" element={<Order />} />
             </Route>
 
-            {/* 404 page */}
-            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         </AuthProvider>
       </Router>

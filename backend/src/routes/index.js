@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { handleStage } = require('../controllers/handleStageEntry');
 const { getOrderID, getOrderItems, getAllOrders, createOrder } = require('../controllers/handleOrder');
-const { logInUser, signUpUser, googleSignIn } = require('../controllers/auth');
+const { logInUser, signUpUser } = require('../controllers/auth');
 const { body } = require('express-validator');
 const { getItem } = require('../controllers/handleItem');
 const { authenticateToken } = require('../middleware/auth');
@@ -26,7 +26,6 @@ router.post('/signup', [
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], signUpUser);
 
-router.post('/google-login', googleSignIn);
 
 // Get user profile (protected route example)
 router.get('/profile', authenticateToken, (req, res) => {

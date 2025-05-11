@@ -98,23 +98,6 @@ const updateItemLocation = async (uid, stage, action) => {
   }
 };
 
-const signInWithGoogle = async (token) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: token,
-    });
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, session: data.session, user: data.user };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-};
-
 const signup = async (username, email, password) => {
   try {
     // Check if email or username already exists
@@ -370,7 +353,6 @@ module.exports = {
   getItemOrderInfo,
   orderCreation,
   handleTransactionAddressForOrder,
-  signInWithGoogle,
   signup,
   login,
 };

@@ -11,29 +11,64 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-    }
-    
-    setLoading(false);
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        const newToken = localStorage.getItem('token');
+        const newUser = localStorage.getItem('user');
+        
+        if (newToken && newUser) {
+          setToken(newToken);
+          setUser(JSON.parse(newUser));
+          axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        } else {
+          setToken(null);
+          setUser(null);
+          delete axios.defaults.headers.common['Authorization'];
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  useEffect(() => {
+  const storedToken = localStorage.getItem('token');
+  const storedUser = localStorage.getItem('user');
+  
+  console.log('AuthProvider initializing - token in localStorage:', Boolean(storedToken));
+  
+  if (storedToken && storedUser) {
+    setToken(storedToken);
+    setUser(JSON.parse(storedUser));
+    axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+  }
+  
+  // Set loading to false after a small delay to ensure state updates
+  setTimeout(() => {
+    setLoading(false);
+  }, 100);
+}, []);
 
   const login = async (email, password) => {
     try {
       const response = await axios.post('http://localhost:5000/api/login', { email, password });
       
       if (response.data.success) {
-        const { token, user } = response.data;
-        setToken(token);
-        setUser(user);
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const { token: newToken, user: newUser } = response.data;
+        
+        // Update state immediately
+        setToken(newToken);
+        setUser(newUser);
+        
+        // Set in localStorage
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        
+        // Update axios headers
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        
+        console.log('Login successful, token set:', Boolean(newToken));
         return { success: true };
       }
       return { success: false, message: response.data.error || 'Login failed' };
@@ -67,27 +102,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleGoogleCallback = async (code) => {
-    try {
-      const response = await axios.post('http://localhost:5000/api/google-login', { token: code });
-      
-      if (response.data.success) {
-        const { session, user } = response.data;
-        setToken(session.access_token);
-        setUser(user);
-        localStorage.setItem('token', session.access_token);
-        localStorage.setItem('user', JSON.stringify(user));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
-        return { success: true };
-      }
-      return { success: false, message: response.data.error || 'Google authentication failed' };
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Google authentication failed' 
-      };
-    }
-  };
 
   const logout = () => {
     setUser(null);
@@ -98,8 +112,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = () => {
-    console.log('Checking authentication - token exists:', !!token);
-    return !!token;
+    const contextToken = token;
+    const storedToken = localStorage.getItem('token');
+    const hasToken = Boolean(contextToken || storedToken);
+    
+    console.log("isAuthenticated check - context token:", Boolean(contextToken));
+    console.log("isAuthenticated check - localStorage token:", Boolean(storedToken));
+    console.log("isAuthenticated result:", hasToken);
+    
+    return hasToken;
   };
 
   const authContextValue = {
@@ -110,7 +131,6 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     isAuthenticated,
-    handleGoogleCallback
   };
 
   return (

@@ -6,7 +6,6 @@ import { Label } from "./ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useAuth } from "../context/AuthContext";
-import SignInWithGoogleButton from "./ui/signinGoogle";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -140,7 +139,6 @@ export default function Signup() {
                   </>
                 )}
               </Button>
-              <SignInWithGoogleButton />
             </form>
             <div className="text-center text-sm pt-2">
               Already have an account?{" "}

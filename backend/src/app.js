@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const routes = require('./routes');
 const cors = require('cors');
+const ipMonitorRoutes = require('../routes/ipMonitor');
 
 // Middleware
 app.use(cors());
@@ -10,6 +11,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api', routes);
+app.use('/api', ipMonitorRoutes);
 
 // OAuth callback handler
 app.get('/auth/callback', (req, res) => {
