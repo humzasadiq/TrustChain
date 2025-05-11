@@ -3,6 +3,7 @@
 import { useState , useEffect, useRef, use } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import jobServices from "../services/api"
+import { useAuth } from "../context/AuthContext"
 
 import { toast } from "sonner"
 import {
@@ -313,6 +314,7 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
 }
 
 export default function Dashboard() {
+  const { isAuthenticated, token } = useAuth()
   const [selectedMode, setSelectedMode] = useState(null)
   const [searchString, setSearchString] = useState("")
   const location = useLocation()
@@ -346,7 +348,16 @@ export default function Dashboard() {
                 <LayoutDashboard className="h-6 w-6" />
                 <h1 className="text-3xl font-bold">Dashboard Overview</h1>
               </div>
-              <SearchInput selectedMode={selectedMode} setSelectedMode={setSelectedMode} searchString={searchString} setSearchString={setSearchString} />
+              
+              {/* Only render SearchInput if authenticated */}
+              {token && (
+                <SearchInput 
+                  selectedMode={selectedMode} 
+                  setSelectedMode={setSelectedMode} 
+                  searchString={searchString} 
+                  setSearchString={setSearchString} 
+                />
+              )}
             </div>
 
             {/* Stats Cards */}

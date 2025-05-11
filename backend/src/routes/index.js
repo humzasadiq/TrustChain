@@ -5,11 +5,8 @@ const { getOrderID, getOrderItems, getAllOrders, createOrder, getOrderDetails } 
 const { logInUser, signUpUser } = require('../controllers/auth');
 const { body } = require('express-validator');
 const { getItem } = require('../controllers/handleItem');
-router.post('/get-item', getItem);
 
-
-router.post('/stage-event', handleStage);
-router.post('/get-order', getOrderID);
+// Public routes
 router.post('/get-item', getItem);
 router.post('/get-order-items', getOrderItems);
 router.get('/get-all-orders', getAllOrders);
@@ -31,6 +28,24 @@ router.post('/signup', [
 
     body('password')
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-], signUpUser)
+], signUpUser);
+
+
+// Get user profile
+router.get('/profile', (req, res) => {
+    res.json({ 
+        success: true, 
+        user: { 
+            id: req.user.id, 
+            email: req.user.email 
+        }
+    });
+});
+
+router.post('/stage-event', handleStage);
+router.post('/get-order', getOrderID);
+router.post('/get-order-items', getOrderItems);
+router.get('/get-all-orders', getAllOrders);
+router.post('/create-order', createOrder);
 
 module.exports = router;

@@ -1,10 +1,47 @@
+import { useState } from "react";
 import { LogIn, ShieldCheck } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Alert, AlertDescription } from "./ui/alert";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        console.log("Login successful, navigating to dashboard...");
+        
+        // Add a slightly longer delay to ensure token is properly set
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 300);
+      } else {
+        setError(result.message || "Login failed");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col items-center justify-between min-h-screen bg-[#F2FDFF] dark:bg-primary/2 pt-45">
@@ -15,20 +52,48 @@ export default function Login() {
               <h1 className="text-2xl font-bold">Login</h1>
               <p className="text-gray-500">Enter your credentials to access your account</p>
             </div>
-            <div className="space-y-3">
+            
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="name@example.com" required type="email" className="bg-[#F2FDFF]" />
+                <Input 
+                  id="email" 
+                  placeholder="name@example.com" 
+                  required 
+                  type="email" 
+                  className="bg-[#F2FDFF]"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)} 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" required type="password" className="bg-[#F2FDFF]" />
+                <Input 
+                  id="password" 
+                  required 
+                  type="password" 
+                  className="bg-[#F2FDFF]"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
-              <Button className="w-full mt-2">
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
+              <Button className="w-full mt-2" type="submit" disabled={loading}>
+                {loading ? (
+                  "Logging in..."
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </>
+                )}
               </Button>
-            </div>
+            </form>
             <div className="text-center text-sm pt-2">
               Don't have an account?{" "}
               <Link to="/signup" className="underline">

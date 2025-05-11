@@ -6,11 +6,14 @@ import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront } from
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
+import { useAuth } from "../context/AuthContext";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const { isAuthenticated, logout } = useAuth();
 
   // Add scroll event listener to track when page is scrolled
   useEffect(() => {
@@ -113,17 +116,29 @@ export default function Navbar() {
 
         {/* Auth buttons - Right aligned */}
         <div className="hidden md:flex items-center gap-2 ml-auto">
-          <ThemeToggle />
-          <Link to="/login">
-            <Button variant="outline" size="sm">
-              <LogIn className="mr-2 h-4 w-4" />
-              Login
-            </Button>
-          </Link>
-          <Link to="/signup">
-            <Button size="sm">Sign Up</Button>
-          </Link>
-        </div>
+        <ThemeToggle />
+        {isAuthenticated() ? (
+          <Button variant="outline" size="sm" onClick={() => {
+            logout();
+            navigate('/login');
+          }}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        ) : (
+          <>
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button size="sm">Sign Up</Button>
+            </Link>
+          </>
+        )}
+      </div>
 
         {/* Mobile menu */}
         {isMenuOpen && (
