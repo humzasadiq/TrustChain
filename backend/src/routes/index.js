@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { handleStage } = require('../controllers/handleStageEntry');
+const { handleStage, getStageEvents } = require('../controllers/handleStageEntry');
 const { getOrderID, getOrderItems, getAllOrders, createOrder, getOrderDetails } = require('../controllers/handleOrder');
 const { logInUser, signUpUser } = require('../controllers/auth');
 const { body } = require('express-validator');
@@ -12,6 +12,7 @@ router.post('/get-order-items', getOrderItems);
 router.get('/get-all-orders', getAllOrders);
 router.post('/create-order', createOrder);
 router.post('/get-order-details', getOrderDetails)
+router.get('/get-stage-events', getStageEvents)
 
 router.post('/login', [
     body('email').isEmail().withMessage('Enter a valid email'),

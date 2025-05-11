@@ -152,9 +152,9 @@ export default function ManufacturingFloorLayout() {
 
   return (
     <div className="mt-6 mb-6">
-      <Card className="flex flex-col h-[calc(120vh-300px)] overflow-hidden">
-        <CardHeader className="border-b">
-          <div className="flex justify-between items-center">
+      <Card className="flex flex-col h-[calc(120vh-300px)] overflow-hidden bg-[#E7FFFE] dark:bg-primary/5">
+        <CardHeader className="border-b ">
+          <div className="flex justify-between items-center ">
             <div>
               <CardTitle>Manufacturing Floor Status</CardTitle>
               <CardDescription>Interactive floor plan with real-time activity tracking</CardDescription>
@@ -171,7 +171,7 @@ export default function ManufacturingFloorLayout() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
             {/* Manufacturing Floor Layout */}
             <div className="lg:col-span-2 overflow-auto">
-              <div className="border rounded-lg shadow-sm bg-card p-4 h-full dark:border-white/45 border-black/45">
+              <div className="border rounded-lg shadow-sm bg-card p-4 h-full dark:border-white/45 border-black/45 ">
                 <h3 className="font-medium mb-4">Manufacturing Floor Layout</h3>
 
                 {/* Layout Grid */}
