@@ -408,7 +408,7 @@ export default function Dashboard() {
 
             {/* Recent Transactions Table */}
             {/* <TrustChainIOTReadings /> */}
-            <ManufacturingFloorLayout/>
+            {/* <ManufacturingFloorLayout/> */}
             <LiveBlock />
             
             

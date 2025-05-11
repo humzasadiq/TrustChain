@@ -3,17 +3,17 @@ import { cn } from "../../lib/utils";
 import ToggleSwitch from "./switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
-import { PlayIcon, PauseIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 export default function ProductionLineAnimation() {
     const [wsStatus, setWsStatus] = useState("disconnected");
     const [transactions, setTransactions] = useState([]);
     const [currentStage, setCurrentStage] = useState(null);
     const [stageStatus, setStageStatus] = useState({}); // For blinking effects
+    const [currentOrderId, setCurrentOrderId] = useState("");
     const wsRef = useRef(null);
     const ESP_IP = "192.168.100.45";
     const [flashId, setFlashId] = useState(null);
-    const animationRef = useRef(null);
     const carRef = useRef(null);
   
     // Stage positions (as percentages)
@@ -23,61 +23,176 @@ export default function ProductionLineAnimation() {
       S3: 70, // Adjusted from 75
     };
 
-    const handleStageUpdate = (stage, message) => {
-        // Extract stage number from the message (e.g., "Stage 3" -> "S3")
-        const stageMatch = stage.match(/Stage (\d+)/);
-        if (!stageMatch) return;
-      
-        // Convert stage number to our format (S1, S2, S3)
-        const stageName = `S${stageMatch[1]}`;
+    // Map ESP32 stage names to our format
+    const stageNameMap = {
+      "Stage 1 (Store)": "S1",
+      "Stage 2 (Sub-Assembly)": "S2", 
+      "Stage 3 (Design)": "S3"
+    };
+
+    const handleStageUpdate = (message) => {
+        // Check if this is a warning message
+        if (message.includes("⚠️") || message.includes("without a valid order")) {
+          // Handle component tag without order ID
+          const newId = Date.now();
+          let rfidTag = "";
+          
+          // Extract RFID tag
+          if (message.includes("COMPONENT TAG:")) {
+            const parts = message.split("COMPONENT TAG:");
+            rfidTag = parts[1]?.trim().split(" ")[0] || "";
+          } else if (message.includes("tag scanned without")) {
+            // Extract from format like "Component tag scanned without a valid order ID: f3 cc 72 14"
+            const parts = message.split("ID:");
+            rfidTag = parts[1]?.trim() || "";
+          }
+          
+          setTransactions(prev => [
+            {
+              id: newId,
+              stage: "Warning",
+              status: "Caution",
+              action: "Invalid",
+              rfidTag,
+              carPart: "Unknown",
+              orderId: "Missing",
+              timestamp: new Date().toLocaleString()
+            },
+            ...prev.slice(0, 19)
+          ]);
+          
+          setFlashId(newId);
+          setTimeout(() => setFlashId(null), 1000);
+          return;
+        }
         
-        // Validate stage name
-        if (!['S1', 'S2', 'S3'].includes(stageName)) return;
+        // Extract stage name
+        let stageName = "";
+        let stagePart = "";
+        
+        for (const key in stageNameMap) {
+          if (message.includes(key)) {
+            stageName = key;
+            stagePart = stageNameMap[key];
+            break;
+          }
+        }
+        
+        if (!stageName) return;
         
         // Update current stage for car animation
-        setCurrentStage(stageName);
-        console.log("Moving to stage:", stageName);
-      
-        // Determine the type of event
-        let statusType = "unknown";
-        if (message.includes("UID:")) {
-          statusType = "rfid";
-        } else if (message.includes("[Entry]")) {
-          statusType = "entry";
+        setCurrentStage(stagePart);
+        
+        // Determine action type (Entry/Exit)
+        let action = "Unknown";
+        if (message.includes("[Entry]")) {
+          action = "Entry";
         } else if (message.includes("[Exit]")) {
-          statusType = "exit";
+          action = "Exit";
         }
-        else if (message.includes("without")) {
-            statusType = "Caution";
+        
+        // Determine status type
+        let status = "Unknown";
+        if (message.includes("ORDER TAG:")) {
+          status = "RFID Scanned";
+        } else if (message.includes("COMPONENT TAG:")) {
+          status = "RFID Scanned";
+        } else if (message.includes("[Entry]")) {
+          status = "Entry";
+        } else if (message.includes("[Exit]")) {
+          status = "Exit";
         }
-      
+        
+        // Extract RFID tag
+        let rfidTag = "";
+        if (message.includes("ORDER TAG:")) {
+          const parts = message.split("ORDER TAG:");
+          rfidTag = parts[1]?.trim().split(" ")[0] || "";
+        } else if (message.includes("COMPONENT TAG:")) {
+          const parts = message.split("COMPONENT TAG:");
+          rfidTag = parts[1]?.trim().split(" ")[0] || "";
+        }
+        
+        // Extract order ID if present
+        let orderId = "";
+        if (message.includes("Order ID:")) {
+          const parts = message.split("Order ID:");
+          orderId = parts[1]?.trim() || "";
+          
+          // Update current order ID if this is an order tag
+          if (message.includes("ORDER TAG:")) {
+            setCurrentOrderId(orderId);
+          }
+        } else if (message.includes("Associated with Order ID:")) {
+          const parts = message.split("Associated with Order ID:");
+          orderId = parts[1]?.trim() || "";
+        } else if (currentOrderId) {
+          orderId = currentOrderId;
+        }
+        
+        // Determine part type (order or component)
+        let carPart = "Unknown";
+        if (message.includes("ORDER TAG:")) {
+          carPart = "Order Tag";
+        } else if (message.includes("COMPONENT TAG:")) {
+          carPart = "Component";
+        }
+        
         // Update stage status for blinking effect
         setStageStatus(prev => {
           const newStatus = { ...prev };
           
           // Clear any existing timeout for this stage
-          if (newStatus[stageName]?.timeoutId) {
-            clearTimeout(newStatus[stageName].timeoutId);
+          if (newStatus[stagePart]?.timeoutId) {
+            clearTimeout(newStatus[stagePart].timeoutId);
           }
-      
+          
           // Set new timeout to clear the blinking effect
           const timeoutId = setTimeout(() => {
             setStageStatus(current => ({
               ...current,
-              [stageName]: { active: false, timeoutId: null }
+              [stagePart]: { active: false, timeoutId: null }
             }));
           }, 2000);
-      
+          
           // Update the stage status
-          newStatus[stageName] = { 
+          let statusType = "unknown";
+          if (status === "RFID Scanned") {
+            statusType = "rfid";
+          } else if (action === "Entry") {
+            statusType = "entry";
+          } else if (action === "Exit") {
+            statusType = "exit";
+          }
+          
+          newStatus[stagePart] = { 
             active: true, 
             type: statusType, 
             timeoutId 
           };
-      
+          
           return newStatus;
         });
-      };
+        
+        // Add transaction to the list
+        const newId = Date.now();
+        setTransactions(prev => [
+          {
+            id: newId,
+            stage: stageName,
+            status,
+            action,
+            rfidTag,
+            carPart,
+            orderId,
+            timestamp: new Date().toLocaleString()
+          },
+          ...prev.slice(0, 19)
+        ]);
+        
+        setFlashId(newId);
+        setTimeout(() => setFlashId(null), 1000);
+    };
 
     useEffect(() => {
       return () => {
@@ -119,54 +234,13 @@ export default function ProductionLineAnimation() {
         setWsStatus("connected");
       };
   
-      // Update WebSocket message handler
+      // Update WebSocket message handler to parse messages from ESP32
       socket.onmessage = (event) => {
         const message = event.data;
-        const idx = message.indexOf(' [');
-        const stage = idx !== -1 ? message.substring(0, idx) : message;
-        console.log(message);
-        console.log(stage);
+        console.log("Received message:", message);
         
-        // Handle stage updates
-        handleStageUpdate(stage, message);
-
-        // Process for transaction table
-        let status = "Unknown";
-        if (message.includes("UID:")) {
-          status = "RFID Scanned";
-        } else if (message.includes("[Entry]")) {
-          status = "Entry";
-        } else if (message.includes("[Exit]")) {
-          status = "Exit";
-        }
-        else if (message.includes("without")) {
-            status = "Caution";
-        }
-  
-        const action = message.includes("[Exit]") ? "Exit" : "Entry";
-  
-        let rfidTag = "";
-        if (message.includes("UID:")) {
-          const parts = message.split("UID:");
-          rfidTag = parts[1]?.trim() || "";
-        }
-  
-        const newId = Date.now();
-        setTransactions(prev => [
-          {
-            id: newId,
-            stage,
-            status,
-            action,
-            rfidTag,
-            carPart: "Unknown",
-            timestamp: new Date().toLocaleString()
-          },
-          ...prev.slice(0, 19)
-        ]);
-        
-        setFlashId(newId);
-        setTimeout(() => setFlashId(null), 1000);
+        // Process the message
+        handleStageUpdate(message);
       };
   
       socket.onclose = () => {
@@ -192,9 +266,10 @@ export default function ProductionLineAnimation() {
     };
   
     const statusColors = {
-      Entry: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      "Entry": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
       "RFID Scanned": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-      Exit: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      "Exit": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+      "Caution": "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
     };
   
     // Get stage class based on status
@@ -232,7 +307,14 @@ export default function ProductionLineAnimation() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="">
+        <CardContent className="p-4">
+          {/* Current Order ID Display */}
+          {currentOrderId && (
+            <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+              <p className="text-sm font-medium">Current Order: <span className="font-semibold">{currentOrderId}</span></p>
+            </div>
+          )}
+          
           {/* Production Line Animation */}
           <div className="border border-backlighter rounded-lg p-3 sm:p-6 mb-4 relative bg-zinc-800">
             <div className="h-48 relative">
@@ -275,16 +357,17 @@ export default function ProductionLineAnimation() {
           </div>
           
           {/* Transaction Table */}
-          <div className="h-[calc(100vh-500px)] overflow-hidden ">
+          <div className="h-[calc(100vh-500px)] overflow-hidden">
             <div className="h-full overflow-auto">
               <Table className="relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="w-[200px] bg-slate-200 dark:bg-primary/5">Stage</TableHead>
-                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">Status</TableHead>
-                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">RFID Tag</TableHead>
-                    <TableHead className="w-[150px] bg-slate-200 dark:bg-primary/5">Car Part</TableHead>
-                    <TableHead className="w-[200px] bg-slate-200 dark:bg-primary/5">Timestamp</TableHead>
+                    <TableHead className="w-[180px] bg-slate-200 dark:bg-primary/5">Stage</TableHead>
+                    <TableHead className="w-[120px] bg-slate-200 dark:bg-primary/5">Status</TableHead>
+                    <TableHead className="w-[120px] bg-slate-200 dark:bg-primary/5">RFID Tag</TableHead>
+                    <TableHead className="w-[120px] bg-slate-200 dark:bg-primary/5">Car Part</TableHead>
+                    <TableHead className="w-[120px] bg-slate-200 dark:bg-primary/5">Order ID</TableHead>
+                    <TableHead className="w-[180px] bg-slate-200 dark:bg-primary/5">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,9 +375,21 @@ export default function ProductionLineAnimation() {
                     transactions.map(tx => (
                       <TableRow 
                         key={tx.id}
-                        className={tx.id === flashId ? "animate-flash" : ""}
+                        className={cn(
+                          tx.id === flashId ? "animate-flash" : "",
+                          tx.status === "Caution" ? "bg-orange-50 dark:bg-orange-900/20" : ""
+                        )}
                       >
-                        <TableCell className="font-medium truncate max-w-[200px]">{tx.stage}</TableCell>
+                        <TableCell className="font-medium truncate max-w-[180px]">
+                          {tx.status === "Caution" ? (
+                            <div className="flex items-center">
+                              <AlertTriangle className="mr-1 h-4 w-4 text-orange-500" />
+                              <span>{tx.stage}</span>
+                            </div>
+                          ) : (
+                            tx.stage
+                          )}
+                        </TableCell>
                         <TableCell>
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-medium inline-block min-w-[80px] text-center",
@@ -306,13 +401,16 @@ export default function ProductionLineAnimation() {
                         <TableCell className="font-mono text-sm">
                           {tx.rfidTag || "-"}
                         </TableCell>
-                        <TableCell className="truncate max-w-[150px]">{tx.carPart}</TableCell>
-                        <TableCell className="truncate max-w-[200px]">{tx.timestamp}</TableCell>
+                        <TableCell className="truncate max-w-[120px]">{tx.carPart}</TableCell>
+                        <TableCell className="truncate max-w-[120px] font-medium">
+                          {tx.orderId || "-"}
+                        </TableCell>
+                        <TableCell className="truncate max-w-[180px]">{tx.timestamp}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4 h-32">
+                      <TableCell colSpan={6} className="text-center py-4 h-32">
                         {wsStatus === "connected"
                           ? "Waiting for production events..."
                           : "Connection to IoT device offline"}

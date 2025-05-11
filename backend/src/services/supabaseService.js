@@ -219,22 +219,19 @@ const getOrder = async (uid) => {
   return data.order_id;
 };
 
-const getDetailsForOrder = async(oid) => {
-  const { data, error } = await supabase
-  .from('orders')
-  .select('*')
-  .eq('order_id', oid)
-  .single();
+const getDetailsForOrder = async (oid) => {
+  const { data, error } = await supabase.from("orders").select("*").eq("order_id", oid).single()
 
   if (error) {
-    throw new Error(`Error checking order existence: ${error.message}`);
+    throw new Error(`Error fetching order details: ${error.message}`)
   }
 
   if (!data) {
-    throw new Error('Invalid RFID tag for order');
+    throw new Error("Order not found")
   }
-  return data;
+  return data
 }
+
 
 // Fetch item info from rfid_items table
 async function getItemInfo(uid) {
