@@ -15,7 +15,6 @@ import Logging from "./components/logging"
 import Order from "./components/order"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./context/AuthContext"
-import SmoothScroll from "./components/ui/SmoothScroll"
 
 function App() {
   const AuthCallback = () => {
@@ -23,7 +22,6 @@ function App() {
   };
 
   return (
-    <SmoothScroll>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
         <AuthProvider>
@@ -53,7 +51,6 @@ function App() {
         </AuthProvider>
       </Router>
     </ThemeProvider>
-    </SmoothScroll>
   )
 }
 
