@@ -98,54 +98,62 @@ const updateItemLocation = async (uid, stage, action) => {
   }
 };
 
+const signInWithGoogle = async (token) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: token,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, session: data.session, user: data.user };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
 const signup = async (username, email, password) => {
   try {
     // Check if email or username already exists
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingEmail } = await supabase
       .from('users')
       .select('id')
-      .or(`email.eq.${email},username.eq.${username}`)
+      .eq('email', email)
+      .maybeSingle();
+      
+    const { data: existingUsername } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
       .maybeSingle();
 
-    if (checkError) throw checkError;
+    if (existingEmail) {
+      return { error: 'Email already in use' };
+    }
 
-    if (existingUser) {
-      // Determine which field is taken
-      const { data: checkEmail } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      const { data: checkUsername } = await supabase
-        .from('users')
-        .select('id')
-        .eq('username', username)
-        .maybeSingle();
-
-      let conflictMsg = 'User already exists with ';
-      if (checkEmail) conflictMsg += 'this email';
-      if (checkEmail && checkUsername) conflictMsg += ' and ';
-      if (checkUsername) conflictMsg += 'this username';
-
-      return { message: conflictMsg };
+    if (existingUsername) {
+      return { error: 'Username already taken' };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const { data, error: insertError } = await supabase.
-      from('users').insert([{ username, email, password: hashedPassword }])
+    const { data, error: insertError } = await supabase
+      .from('users')
+      .insert([{ username, email, password: hashedPassword }])
       .select()
       .single();
 
     if (insertError) throw insertError;
 
     const token = jwt.sign({ id: data.id, email: data.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    return { message: 'User registered', token };
+    return { message: 'User registered successfully', token, user: { id: data.id, username: data.username, email: data.email } };
   } catch (err) {
-    return { message: 'Signup failed.', error: err.message };
+    return { error: err.message };
   }
-}
+};
 
 const login = async (email, password) => {
   try {
@@ -156,21 +164,30 @@ const login = async (email, password) => {
       .single();
 
     if (error || !user) {
-      return { message: 'Invalid credentials' };
+      return { success: false, error: 'Invalid credentials' };
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return ({ message: 'Invalid credentials' });
+      return { success: false, error: 'Invalid credentials' };
     }
 
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    return { message: 'Login successful', token };
+    return { 
+      success: true,
+      message: 'Login successful', 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email 
+      } 
+    };
   } catch (err) {
-    return { message: 'Server error', error: err.message };
+    return { success: false, error: err.message };
   }
-}
+};
 
 const getItemsForOrder = async (orderId) => {
   const { data: order, error: orderError } = await supabase
@@ -322,13 +339,14 @@ module.exports = {
   logToSupabase,
   updateItemLocation,
   logToOrderItems,
-  handleTransactionAddressForItem,
-  signup,
-  login,
+  handleTransactionAddressForItem,  
   getOrder,
   getItemsForOrder,
   getOrders,
   getItemInfo,
   getItemOrderInfo,
-  orderCreation
+  orderCreation,
+  signInWithGoogle,
+  signup,
+  login,
 };
