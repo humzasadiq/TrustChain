@@ -1,3 +1,6 @@
+//ignore this file (protected routes wali file hai)
+
+
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 

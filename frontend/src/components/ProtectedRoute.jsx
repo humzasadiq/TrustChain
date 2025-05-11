@@ -6,13 +6,11 @@ const ProtectedRoute = () => {
   const { token, loading } = useAuth();
   const [isReady, setIsReady] = useState(false);
   
-  // Add an effect to ensure token is properly loaded from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     console.log('ProtectedRoute - storedToken from localStorage:', Boolean(storedToken));
     console.log('ProtectedRoute - token from context:', Boolean(token));
     
-    // Set isReady to true once we've checked both sources
     setIsReady(true);
   }, [token]);
   

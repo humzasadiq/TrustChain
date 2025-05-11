@@ -6,6 +6,81 @@ const jwt = require('jsonwebtoken');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+const signup = async (username, email, password) => {
+  try {
+    // Check if email or username already exists
+    const { data: existingEmail } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+      
+    const { data: existingUsername } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (existingEmail) {
+      return { error: 'Email already in use' };
+    }
+
+    if (existingUsername) {
+      return { error: 'Username already taken' };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { data, error: insertError } = await supabase
+      .from('users')
+      .insert([{ username, email, password: hashedPassword }])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    const token = jwt.sign({ id: data.id, email: data.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return { message: 'User registered successfully', token, user: { id: data.id, username: data.username, email: data.email } };
+  } catch (err) {
+    return { error: err.message };
+  }
+};
+
+const login = async (email, password) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !user) {
+      return { success: false, error: 'Invalid credentials' };
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return { success: false, error: 'Invalid credentials' };
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    return { 
+      success: true,
+      message: 'Login successful', 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email 
+      } 
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
+
 const logToSupabase = async (uid, stage, status, transaction_address) => {
   const karachiTime = DateTime.now().setZone('Asia/Karachi');
   const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
@@ -95,80 +170,6 @@ const updateItemLocation = async (uid, stage, action) => {
       .eq('uid', uid);
     if (error) throw error;
     return { status: 'Updated', data };
-  }
-};
-
-const signup = async (username, email, password) => {
-  try {
-    // Check if email or username already exists
-    const { data: existingEmail } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
-      
-    const { data: existingUsername } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .maybeSingle();
-
-    if (existingEmail) {
-      return { error: 'Email already in use' };
-    }
-
-    if (existingUsername) {
-      return { error: 'Username already taken' };
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const { data, error: insertError } = await supabase
-      .from('users')
-      .insert([{ username, email, password: hashedPassword }])
-      .select()
-      .single();
-
-    if (insertError) throw insertError;
-
-    const token = jwt.sign({ id: data.id, email: data.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    return { message: 'User registered successfully', token, user: { id: data.id, username: data.username, email: data.email } };
-  } catch (err) {
-    return { error: err.message };
-  }
-};
-
-const login = async (email, password) => {
-  try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (error || !user) {
-      return { success: false, error: 'Invalid credentials' };
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return { success: false, error: 'Invalid credentials' };
-    }
-
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    return { 
-      success: true,
-      message: 'Login successful', 
-      token, 
-      user: { 
-        id: user.id, 
-        username: user.username, 
-        email: user.email 
-      } 
-    };
-  } catch (err) {
-    return { success: false, error: err.message };
   }
 };
 

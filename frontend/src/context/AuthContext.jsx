@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
   }
   
-  // Set loading to false after a small delay to ensure state updates
   setTimeout(() => {
     setLoading(false);
   }, 100);
@@ -57,15 +56,12 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         const { token: newToken, user: newUser } = response.data;
         
-        // Update state immediately
         setToken(newToken);
         setUser(newUser);
         
-        // Set in localStorage
         localStorage.setItem('token', newToken);
         localStorage.setItem('user', JSON.stringify(newUser));
         
-        // Update axios headers
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         
         console.log('Login successful, token set:', Boolean(newToken));

@@ -5,7 +5,6 @@ const { getOrderID, getOrderItems, getAllOrders, createOrder } = require('../con
 const { logInUser, signUpUser } = require('../controllers/auth');
 const { body } = require('express-validator');
 const { getItem } = require('../controllers/handleItem');
-const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
 router.post('/get-item', getItem);
@@ -27,8 +26,8 @@ router.post('/signup', [
 ], signUpUser);
 
 
-// Get user profile (protected route example)
-router.get('/profile', authenticateToken, (req, res) => {
+// Get user profile
+router.get('/profile', (req, res) => {
     res.json({ 
         success: true, 
         user: { 
@@ -38,11 +37,10 @@ router.get('/profile', authenticateToken, (req, res) => {
     });
 });
 
-// Protected routes
-router.post('/stage-event', authenticateToken, handleStage);
-router.post('/get-order', authenticateToken, getOrderID);
-router.post('/get-order-items', authenticateToken, getOrderItems);
-router.get('/get-all-orders', authenticateToken, getAllOrders);
-router.post('/create-order', authenticateToken, createOrder);
+router.post('/stage-event', handleStage);
+router.post('/get-order', getOrderID);
+router.post('/get-order-items', getOrderItems);
+router.get('/get-all-orders', getAllOrders);
+router.post('/create-order', createOrder);
 
 module.exports = router;
