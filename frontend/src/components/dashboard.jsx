@@ -1,7 +1,20 @@
 "use client"
 
-import { useState , useEffect} from "react"
-import { Link, useLocation } from "react-router-dom"
+import { useState , useEffect, useRef, use } from "react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import jobServices from "../services/api"
+
+import { toast } from "sonner"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 import {
   LayoutDashboard,
   BarChart3,
@@ -18,12 +31,18 @@ import {
   ChevronRight,
   Home,
   Shield,
+  MoveRight,
+  ArrowRight,
+  ExternalLink,
+  Search,
+  ShieldCheck
 } from "lucide-react"
 
 import { cn } from "../lib/utils"
 import ToggleSwitch from "./ui/switch"
 import TrustChainIOTReadings from "./Readings"
-import ManufacturingFloorTracker from "./Assembly"
+import LiveBlock from "./ui/liveblock"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import {
   SidebarProvider,
@@ -57,6 +76,10 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { Button } from "./ui/button"
+import IPStatusMonitor from "./IpStatusMonitor"
+import CountTransactions from "./CountTransactions"
+
 
 // Sample data for charts
 const lineChartData = [
@@ -125,6 +148,8 @@ const recentTransactions = [
   },
 ]
 
+const SIDEBAR_KEYBOARD_SHORTCUT = "/"
+
 // Custom tooltip component for charts
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -138,7 +163,157 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
+function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchString }) {
+  const inputRef = useRef(null)
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [showHint, setShowHint] = useState(true) // Add state for hint visibility
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const activeElement = document.activeElement;
+      const isInputActive = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement;
+
+      if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && !isInputActive) {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchString || !selectedMode) {
+      toast.error("Please enter a search term and select a mode");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (selectedMode === 'order') {
+        const result = await jobServices.fetchOrderById(searchString);
+        if (result) {
+          toast.success("Order found!");
+          window.open(`/order/${searchString}`, '_blank', 'noopener,noreferrer');
+        } else {
+          setError(`No order found with ID: ${searchString}`);
+        }
+      } else if (selectedMode === 'part') {
+        const result = await jobServices.fetchPartById(searchString);
+        if (result) {
+          toast.success("Part found!");
+          window.open(`/part/${searchString}`, '_blank', 'noopener,noreferrer');
+        } else {
+          setError(`No part found with ID: ${searchString}`);
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error(`Error fetching ${selectedMode}:`, err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isLoading) {
+      toast.loading("Searching...", {
+        id: "search-loading"
+      });
+    } else {
+      toast.dismiss("search-loading");
+    }
+  }, [isLoading]);
+
+  const isInputActive = useRef(false);
+
+  useEffect(() => {
+    const activeElement = document.activeElement;
+    const isInputActive = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement;
+  },[]);
+
+  // Add focus handlers
+  const handleFocus = () => {
+    setShowHint(false)
+  }
+
+  const handleBlur = () => {
+    setShowHint(true)
+  }
+
+  return (
+    <div className="space-y-2 pt-30 bg-[#F2FDFF] dark:bg-primary/0.5">
+      <form onSubmit={handleSearch} className="flex h-9 w-100">
+        <div className={`flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background relative`}>
+          <input
+            ref={inputRef}
+            value={searchString}
+            onChange={(e) => setSearchString(e.target.value)}
+            placeholder=""
+            type="text"
+            disabled={isLoading}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            className="flex w-full bg-transparent p-1 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          {showHint && !searchString && (
+            <div
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none select-none text-muted-foreground"
+              style={{ zIndex: 1 }}
+            >
+              <span>
+                Type{" "}
+                <span className="border border-zinc-500/60 px-2 py-0.5 font-bold rounded">
+                  /
+                </span>{" "}
+                to {selectedMode === "part" ? "Search Part" : "Search Order"}
+              </span>
+            </div>
+          )}
+        </div>
+        <Select
+          value={selectedMode || "part"}
+          onValueChange={setSelectedMode}
+          defaultValue="part"
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-[90px] rounded-l-none border-l-0 rounded-r-none border border-gray-500">
+            <SelectValue placeholder="Mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Mode</SelectLabel>
+              <SelectItem value="part">Part</SelectItem>
+              <SelectItem value="order">Order</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Button className={"rounded-l-none border-l-0 border border-gray-500"} onClick={handleSearch}>
+          <Search className="h-4 w-4 mr-2" />
+          {isLoading ? "Searching..." : "Search"}
+        </Button>
+      </form>
+    </div>
+  )
+}
+
 export default function Dashboard() {
+  const [selectedMode, setSelectedMode] = useState(null)
+  const [searchString, setSearchString] = useState("")
   const location = useLocation()
   const [openMenus, setOpenMenus] = useState({
     analytics: true,
@@ -157,169 +332,35 @@ export default function Dashboard() {
   }
 
   return (
-    <SidebarProvider>
+      <div>
       {/* <div className="flex h-screen w-full"> */}
-        <Sidebar className="border-r">
-          <SidebarHeader className="border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="font-semibold">TrustChain</span>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
-                      <Link to="/dashboard">
-                        <Home className="h-4 w-4" />
-                        <span>Overview</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  {/* Analytics Menu */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => toggleMenu("analytics")} className="justify-between">
-                      <div className="flex items-center">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        <span>Analytics</span>
-                      </div>
-                      {openMenus.analytics ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </SidebarMenuButton>
-
-                    {openMenus.analytics && (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/performance">
-                              <LineChartIcon className="h-4 w-4" />
-                              <span>Performance</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/revenue">
-                              <CircleDollarSign className="h-4 w-4" />
-                              <span>Revenue</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/distribution">
-                              <PieChartIcon className="h-4 w-4" />
-                              <span>Distribution</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-
-                  {/* Management Menu */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => toggleMenu("management")} className="justify-between">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        <span>Management</span>
-                      </div>
-                      {openMenus.management ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </SidebarMenuButton>
-
-                    {openMenus.management && (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/users">
-                              <Users className="h-4 w-4" />
-                              <span>Users</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/reports">
-                              <FileText className="h-4 w-4" />
-                              <span>Reports</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/dashboard/settings">
-                              <Settings className="h-4 w-4" />
-                              <span>Settings</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F2FDFF] dark:bg-primary/2">
           
           <div className="p-4 md:p-6 w-full">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 ">
+              
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
                 <h1 className="text-3xl font-bold">Dashboard Overview</h1>
               </div>
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="md:hidden" />
-              </div>
+              <SearchInput selectedMode={selectedMode} setSelectedMode={setSelectedMode} searchString={searchString} setSearchString={setSearchString} />
             </div>
             {/* Recent Transactions Table */}
-            <TrustChainIOTReadings />
-            <ManufacturingFloorTracker/>
+            {/* <TrustChainIOTReadings /> */}
+            <LiveBlock />
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+            {/* <Card className={"p-0 m-0 dark:bg-black"}>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,248</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      +12.5%
-                    </span>{" "}
-                    from last month
-                  </p>
+                  <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0 " />
                 </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Transactions</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">432</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      +8.2%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
+              </Card> */}
+              <IPStatusMonitor/>
+              
+              <CountTransactions/>
+              {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Revenue</CardTitle>
                   <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
@@ -334,8 +375,9 @@ export default function Dashboard() {
                     from last month
                   </p>
                 </CardContent>
-              </Card>
-              <Card>
+              </Card> */}
+
+              {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
@@ -350,11 +392,11 @@ export default function Dashboard() {
                     from last month
                   </p>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
 
             {/* Charts */}
-            <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
+            {/* <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Transaction Overview</CardTitle>
@@ -380,7 +422,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
                 <CardHeader>
                   <CardTitle>Distribution by Type</CardTitle>
                   <CardDescription>Transaction types breakdown</CardDescription>
@@ -407,10 +449,10 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
 
             {/* Weekly Activity Bar Chart */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Weekly Activity</CardTitle>
@@ -428,10 +470,10 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
           </div>
         </div>
       {/* </div> */}
-    </SidebarProvider>
+      </div>
   )
 }
