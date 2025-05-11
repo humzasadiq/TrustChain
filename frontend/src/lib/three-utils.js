@@ -11,7 +11,7 @@ export function setupThreeJsScene(container) {
     0.1,
     1000
   );
-  camera.position.set(0, 0.5, 2);
+  camera.position.set(0, 0.5, 3);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(container.clientWidth, container.clientHeight);

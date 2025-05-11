@@ -63,9 +63,9 @@ export default function IPStatusMonitor() {
       clearInterval(timer)
     }
   }, [])
-
+  
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-[#E7FFFE] dark:bg-primary/5 ">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Assembly Line Status</CardTitle>
       </CardHeader>

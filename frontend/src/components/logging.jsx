@@ -19,7 +19,7 @@ import {
   FileText,
   FileIcon as FilePdf,
   FileJson,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -31,117 +31,151 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
 import { useTheme } from "next-themes"
 
-// Import jsPDF for PDF export
+// Import jsPDF and jspdf-autotable correctly
 import { jsPDF } from "jspdf"
-import "jspdf-autotable"
+import autoTable from "jspdf-autotable"
 
 export default function Logging() {
   const { theme } = useTheme()
   const isDarkMode = theme === "dark"
 
-  // Mock data with more entries for better visualization
-  const [transactions, setTransactions] = useState([
-    {
-      id: "1",
-      stage: "Stage 1",
-      status: "Entry",
-      rfidTag: "A1B2C3D4",
-      carPart: "Engine",
-      timestamp: "2025-05-10 09:30:45",
-      action: "Entry",
-    },
-    {
-      id: "2",
-      stage: "Stage 2",
-      status: "RFID Scanned",
-      rfidTag: "E5F6G7H8",
-      carPart: "Transmission",
-      timestamp: "2025-05-10 09:35:22",
-      action: "Entry",
-    },
-    {
-      id: "3",
-      stage: "Stage 3",
-      status: "Exit",
-      rfidTag: "I9J0K1L2",
-      carPart: "Chassis",
-      timestamp: "2025-05-10 09:40:18",
-      action: "Exit",
-    },
-    {
-      id: "4",
-      stage: "Stage 1",
-      status: "Entry",
-      rfidTag: "M3N4O5P6",
-      carPart: "Brake System",
-      timestamp: "2025-05-10 09:45:33",
-      action: "Entry",
-    },
-    {
-      id: "5",
-      stage: "Stage 2",
-      status: "RFID Scanned",
-      rfidTag: "Q7R8S9T0",
-      carPart: "Steering Wheel",
-      timestamp: "2025-05-10 09:50:12",
-      action: "Entry",
-    },
-    {
-      id: "6",
-      stage: "Stage 3",
-      status: "Exit",
-      rfidTag: "U1V2W3X4",
-      carPart: "Dashboard",
-      timestamp: "2025-05-10 09:55:47",
-      action: "Exit",
-    },
-  ])
-
+  const [transactions, setTransactions] = useState([])
   const [flashId, setFlashId] = useState(null)
   const [wsStatus, setWsStatus] = useState("disconnected")
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [filteredTransactions, setFilteredTransactions] = useState(transactions)
+  const [filteredTransactions, setFilteredTransactions] = useState([])
   const [activeFilters, setActiveFilters] = useState({
     status: "All Events",
     stage: null,
     dateRange: "All Time",
   })
   const tableRef = useRef(null)
+  const [uniqueStages, setUniqueStages] = useState([])
+  const [dateFilterDebug, setDateFilterDebug] = useState({
+    enabled: false,
+    timestamps: [],
+    parsedDates: [],
+  })
 
-  // Function to fetch logs from database (to be implemented)
+  // Function to fetch logs from database
   const fetchLogs = async () => {
     setIsLoading(true)
+    try {
+      // Make API call to get stage events
+      const response = await fetch("http://localhost:5000/api/get-stage-events")
+      const data = await response.json()
 
-    // Simulate API call
-    setTimeout(() => {
-      // In a real implementation, you would fetch from your database
+      if (data.success && data.eventResult) {
+        // Transform the data to match our component's expected format
+        const formattedData = data.eventResult.map((event, index) => ({
+          id: event.id || index.toString(),
+          stage: event.stage || "Unknown",
+          status: event.status || "Unknown",
+          rfidTag: event.uid || "-",
+          carPart: event.car_part || "Unknown", // This might need adjustment based on your actual data structure
+          timestamp: event.timestamp || new Date().toLocaleString(),
+          action: event.status === "Present" ? "Entry" : event.status === "Left" ? "Exit" : "Unknown",
+          transaction_address: event.transaction_address || null,
+        }))
+
+        setTransactions(formattedData)
+
+        // Extract unique stages for dynamic filtering
+        const stages = [...new Set(formattedData.map((item) => item.stage))].filter(Boolean)
+        setUniqueStages(stages)
+
+        // Flash the newest entry if there is one
+        if (formattedData.length > 0) {
+          setFlashId(formattedData[0].id)
+          setTimeout(() => setFlashId(null), 1000)
+        }
+
+        // Debug: Log timestamp formats
+        const timestamps = formattedData.map((tx) => tx.timestamp).filter(Boolean)
+        console.log("Sample timestamps:", timestamps.slice(0, 3))
+
+        // Try to parse a few dates to see if they work
+        const parsedDates = timestamps.slice(0, 3).map((ts) => {
+          try {
+            return {
+              original: ts,
+              parsed: new Date(ts.replace(/-/g, "/")).toISOString(),
+              timestamp: new Date(ts.replace(/-/g, "/")).getTime(),
+            }
+          } catch (e) {
+            return { original: ts, error: e.message }
+          }
+        })
+        console.log("Parsed dates:", parsedDates)
+
+        setDateFilterDebug({
+          enabled: true,
+          timestamps: timestamps.slice(0, 5),
+          parsedDates,
+        })
+      } else {
+        console.error("Failed to fetch logs:", data)
+      }
+    } catch (error) {
+      console.error("Error fetching logs:", error)
+    } finally {
       setIsLoading(false)
-    }, 800)
+    }
+  }
+
+  // Helper function to safely parse dates
+  const parseDate = (dateString) => {
+    if (!dateString) return null
+
+    try {
+      // Try standard format first
+      let date = new Date(dateString)
+
+      // If invalid, try replacing dashes with slashes (helps with some formats)
+      if (isNaN(date.getTime())) {
+        date = new Date(dateString.replace(/-/g, "/"))
+      }
+
+      // If still invalid, try a more specific approach for SQL-like timestamps
+      if (isNaN(date.getTime()) && dateString.includes("-")) {
+        const parts = dateString.split(/[- :]/)
+        // parts[0]=year, parts[1]=month, parts[2]=day, parts[3]=hour, parts[4]=minute, parts[5]=second
+        if (parts.length >= 3) {
+          date = new Date(parts[0], parts[1] - 1, parts[2], parts[3] || 0, parts[4] || 0, parts[5] || 0)
+        }
+      }
+
+      return isNaN(date.getTime()) ? null : date
+    } catch (e) {
+      console.error("Date parsing error:", e, "for date:", dateString)
+      return null
+    }
   }
 
   // Apply filters
   useEffect(() => {
     let filtered = [...transactions]
+    console.log("Applying filters:", activeFilters)
 
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (tx) =>
-          tx.stage.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tx.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tx.rfidTag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tx.carPart.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tx.timestamp.toLowerCase().includes(searchTerm.toLowerCase()),
+          (tx.stage && tx.stage.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (tx.status && tx.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (tx.rfidTag && tx.rfidTag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (tx.carPart && tx.carPart.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (tx.timestamp && tx.timestamp.toLowerCase().includes(searchTerm.toLowerCase())),
       )
     }
 
     // Apply status filter
     if (activeFilters.status !== "All Events") {
       filtered = filtered.filter((tx) => {
-        if (activeFilters.status === "Entry Events") return tx.status === "Entry"
+        if (activeFilters.status === "Entry Events") return tx.status === "Present"
         if (activeFilters.status === "RFID Scanned") return tx.status === "RFID Scanned"
-        if (activeFilters.status === "Exit Events") return tx.status === "Exit"
+        if (activeFilters.status === "Exit Events") return tx.status === "Left"
         return true
       })
     }
@@ -159,22 +193,45 @@ export default function Logging() {
       const lastWeek = new Date(today - 7 * 86400000).getTime()
       const lastMonth = new Date(today - 30 * 86400000).getTime()
 
+      console.log("Date filter:", activeFilters.dateRange)
+      console.log("Reference dates:", {
+        now: now.toISOString(),
+        today: new Date(today).toISOString(),
+        yesterday: new Date(yesterday).toISOString(),
+        lastWeek: new Date(lastWeek).toISOString(),
+        lastMonth: new Date(lastMonth).toISOString(),
+      })
+
       filtered = filtered.filter((tx) => {
-        const txDate = new Date(tx.timestamp.replace(/-/g, "/")).getTime()
+        if (!tx.timestamp) return false
+
+        const parsedDate = parseDate(tx.timestamp)
+        if (!parsedDate) return false
+
+        const txTime = parsedDate.getTime()
 
         if (activeFilters.dateRange === "Today") {
-          return txDate >= today
+          const result = txTime >= today
+          console.log(`Date check for ${tx.timestamp}: ${result ? "PASS" : "FAIL"} (Today)`)
+          return result
         } else if (activeFilters.dateRange === "Yesterday") {
-          return txDate >= yesterday && txDate < today
+          const result = txTime >= yesterday && txTime < today
+          console.log(`Date check for ${tx.timestamp}: ${result ? "PASS" : "FAIL"} (Yesterday)`)
+          return result
         } else if (activeFilters.dateRange === "Last 7 days") {
-          return txDate >= lastWeek
+          const result = txTime >= lastWeek
+          console.log(`Date check for ${tx.timestamp}: ${result ? "PASS" : "FAIL"} (Last 7 days)`)
+          return result
         } else if (activeFilters.dateRange === "Last 30 days") {
-          return txDate >= lastMonth
+          const result = txTime >= lastMonth
+          console.log(`Date check for ${tx.timestamp}: ${result ? "PASS" : "FAIL"} (Last 30 days)`)
+          return result
         }
         return true
       })
     }
 
+    console.log("Filtered transactions:", filtered.length)
     setFilteredTransactions(filtered)
   }, [searchTerm, transactions, activeFilters])
 
@@ -198,22 +255,29 @@ export default function Logging() {
 
   // Export logs as CSV
   const handleExportCSV = () => {
-    // Create CSV content
-    const headers = ["Stage", "Status", "RFID Tag", "Car Part", "Timestamp"]
-    const csvContent = [
-      headers.join(","),
-      ...filteredTransactions.map((tx) => [tx.stage, tx.status, tx.rfidTag, tx.carPart, tx.timestamp].join(",")),
-    ].join("\n")
+    try {
+      // Create CSV content
+      const headers = ["Stage", "Status", "RFID Tag", "Timestamp"]
+      const csvContent = [
+        headers.join(","),
+        ...filteredTransactions.map((tx) =>
+          [tx.stage || "Unknown", tx.status || "Unknown", tx.rfidTag || "-", tx.timestamp || ""].join(","),
+        ),
+      ].join("\n")
 
-    // Create and download file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", `production_logs_${new Date().toISOString().split("T")[0]}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `production_logs_${new Date().toISOString().split("T")[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("Error exporting CSV:", error)
+      alert("There was an error exporting to CSV. Please try again.")
+    }
   }
 
   // Export logs as PDF
@@ -230,14 +294,22 @@ export default function Logging() {
       doc.setFontSize(10)
       doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22)
 
-      // Create table with autotable plugin
-      doc.autoTable({
+      // Prepare data for the table
+      const tableData = filteredTransactions.map((tx) => [
+        tx.stage || "Unknown",
+        tx.status || "Unknown",
+        tx.rfidTag || "-",
+        tx.timestamp || "",
+      ])
+
+      // Use the imported autoTable function directly
+      autoTable(doc, {
         startY: 30,
-        head: [["Stage", "Status", "RFID Tag", "Car Part", "Timestamp"]],
-        body: filteredTransactions.map((tx) => [tx.stage, tx.status, tx.rfidTag, tx.carPart, tx.timestamp]),
-        theme: isDarkMode ? "dark" : "striped",
+        head: [["Stage", "Status", "RFID Tag", "Timestamp"]],
+        body: tableData,
+        theme: "striped",
         headStyles: {
-          fillColor: isDarkMode ? [30, 41, 59] : [52, 73, 94],
+          fillColor: [52, 73, 94],
           textColor: [255, 255, 255],
         },
         styles: {
@@ -245,7 +317,7 @@ export default function Logging() {
           cellPadding: 3,
         },
         alternateRowStyles: {
-          fillColor: isDarkMode ? [17, 24, 39] : [240, 240, 240],
+          fillColor: [240, 240, 240],
         },
       })
 
@@ -253,34 +325,39 @@ export default function Logging() {
       doc.save(`production_logs_${new Date().toISOString().split("T")[0]}.pdf`)
     } catch (error) {
       console.error("Error generating PDF:", error)
-      alert("There was an error generating the PDF. Please try again.")
+      alert("There was an error generating the PDF: " + error.message)
     }
   }
 
   // Export logs as JSON
   const handleExportJSON = () => {
-    const jsonContent = JSON.stringify(filteredTransactions, null, 2)
-    const blob = new Blob([jsonContent], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", `production_logs_${new Date().toISOString().split("T")[0]}.json`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      const jsonContent = JSON.stringify(filteredTransactions, null, 2)
+      const blob = new Blob([jsonContent], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `production_logs_${new Date().toISOString().split("T")[0]}.json`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("Error exporting JSON:", error)
+      alert("There was an error exporting to JSON. Please try again.")
+    }
   }
 
   // Status colors for both light and dark modes
   const statusColors = {
-    Entry: "bg-green-500 text-white",
+    Present: "bg-green-500 text-white",
     "RFID Scanned": "bg-amber-500 text-black dark:text-white",
-    Exit: "bg-red-500 text-white",
+    Left: "bg-red-500 text-white",
   }
 
   const statusIcons = {
-    Entry: <Clock className="h-3 w-3 mr-1" />,
+    Present: <Clock className="h-3 w-3 mr-1" />,
     "RFID Scanned": <Tag className="h-3 w-3 mr-1" />,
-    Exit: <Clock className="h-3 w-3 mr-1" />,
+    Left: <Clock className="h-3 w-3 mr-1" />,
   }
 
   const stageColors = {
@@ -289,268 +366,298 @@ export default function Logging() {
     "Stage 3": "bg-orange-500",
   }
 
+  // Debug function to check filter state
+  const debugFilter = (filterType, value) => {
+    console.log(`Setting ${filterType} filter to:`, value)
+    setActiveFilters((prev) => {
+      const newFilters = { ...prev, [filterType]: value }
+      console.log("New filters:", newFilters)
+      return newFilters
+    })
+  }
+
   return (
     <div className="bg-[#F2FDFF] dark:bg-primary/2">
-    <div className="container mx-auto py-6 pt-20 ">
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2 ">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Layers className="h-8 w-8 text-primary" />
-              Logs
-            </h1>
-            <p className="text-muted-foreground mt-1">Production line event history</p>
+      <div className="container mx-auto py-6 pt-20 ">
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2 ">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                <Layers className="h-8 w-8 text-primary" />
+                Logs
+              </h1>
+              <p className="text-muted-foreground mt-1">Production line event history</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="default" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Export Logs</DialogTitle>
+                    <DialogDescription>Choose a format to export your log data</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 gap-4 py-4">
+                    <Button
+                      onClick={handleExportCSV}
+                      variant="outline"
+                      className="flex justify-start items-center gap-3"
+                    >
+                      <FileText className="h-5 w-5" />
+                      <div className="flex flex-col items-start">
+                        <span>CSV Format</span>
+                        <span className="text-xs text-muted-foreground">Export as comma-separated values</span>
+                      </div>
+                    </Button>
+
+                    <Button
+                      onClick={handleExportPDF}
+                      variant="outline"
+                      className="flex justify-start items-center gap-3"
+                    >
+                      <FilePdf className="h-5 w-5" />
+                      <div className="flex flex-col items-start">
+                        <span>PDF Format</span>
+                        <span className="text-xs text-muted-foreground">Export as a formatted document</span>
+                      </div>
+                    </Button>
+
+                    <Button
+                      onClick={handleExportJSON}
+                      variant="outline"
+                      className="flex justify-start items-center gap-3"
+                    >
+                      <FileJson className="h-5 w-5" />
+                      <div className="flex flex-col items-start">
+                        <span>JSON Format</span>
+                        <span className="text-xs text-muted-foreground">Export as structured data</span>
+                      </div>
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="default" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Export Logs</DialogTitle>
-                  <DialogDescription>Choose a format to export your log data</DialogDescription>
-                </DialogHeader>
-                <div className="grid grid-cols-1 gap-4 py-4">
-                  <Button onClick={handleExportCSV} variant="outline" className="flex justify-start items-center gap-3">
-                    <FileText className="h-5 w-5" />
-                    <div className="flex flex-col items-start">
-                      <span>CSV Format</span>
-                      <span className="text-xs text-muted-foreground">Export as comma-separated values</span>
-                    </div>
+          {/* Filters and Search */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-2 bg-white dark:bg-primary/0.5">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search logs..."
+                className="pl-9 w-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Filter className="h-4 w-4" />
+                    {activeFilters.status !== "All Events" || activeFilters.stage
+                      ? activeFilters.stage || activeFilters.status
+                      : "Filter"}
+                    <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
                   </Button>
-
-                  <Button onClick={handleExportPDF} variant="outline" className="flex justify-start items-center gap-3">
-                    <FilePdf className="h-5 w-5" />
-                    <div className="flex flex-col items-start">
-                      <span>PDF Format</span>
-                      <span className="text-xs text-muted-foreground">Export as a formatted document</span>
-                    </div>
-                  </Button>
-
-                  <Button
-                    onClick={handleExportJSON}
-                    variant="outline"
-                    className="flex justify-start items-center gap-3"
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setActiveFilters((prev) => ({ ...prev, status: "All Events", stage: null }))
+                      console.log("Reset filters")
+                    }}
                   >
-                    <FileJson className="h-5 w-5" />
-                    <div className="flex flex-col items-start">
-                      <span>JSON Format</span>
-                      <span className="text-xs text-muted-foreground">Export as structured data</span>
-                    </div>
+                    All Events
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("status", "Entry Events")}>
+                    Entry Events
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("status", "RFID Scanned")}>
+                    RFID Scanned
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("status", "Exit Events")}>
+                    Exit Events
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {uniqueStages.length > 0 ? (
+                    uniqueStages.map((stage) => (
+                      <DropdownMenuItem
+                        key={stage}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          debugFilter("stage", stage)
+                          debugFilter("status", "All Events")
+                        }}
+                      >
+                        {stage}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => {
+                          debugFilter("stage", "Stage 1")
+                          debugFilter("status", "All Events")
+                        }}
+                      >
+                        Stage 1
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => {
+                          debugFilter("stage", "Stage 2")
+                          debugFilter("status", "All Events")
+                        }}
+                      >
+                        Stage 2
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => {
+                          debugFilter("stage", "Stage 3")
+                          debugFilter("status", "All Events")
+                        }}
+                      >
+                        Stage 3
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {activeFilters.dateRange !== "All Time" ? activeFilters.dateRange : "Date"}
+                    <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("dateRange", "All Time")}>
+                    All Time
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("dateRange", "Today")}>
+                    Today
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("dateRange", "Yesterday")}>
+                    Yesterday
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("dateRange", "Last 7 days")}>
+                    Last 7 days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => debugFilter("dateRange", "Last 30 days")}>
+                    Last 30 days
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <Card className=" shadow-sm border-slate-200 dark:border-slate-800 bg-[#E7FFFE] dark:bg-primary/5 ">
+            <CardHeader className="px-6 py-4">
+              <div className="flex justify-between items-center ">
+                <div>
+                  <CardTitle className="text-lg ">Production Events Log</CardTitle>
+                  <CardDescription>Historical record of all production line events</CardDescription>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-2 bg-white dark:bg-primary/0.5">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search logs..."
-              className="pl-9 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <Filter className="h-4 w-4" />
-                  {activeFilters.status !== "All Events" || activeFilters.stage
-                    ? activeFilters.stage || activeFilters.status
-                    : "Filter"}
-                  <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, status: "All Events", stage: null }))}
-                >
-                  All Events
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, status: "Entry Events" }))}
-                >
-                  Entry Events
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, status: "RFID Scanned" }))}
-                >
-                  RFID Scanned
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, status: "Exit Events" }))}
-                >
-                  Exit Events
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, stage: "Stage 1" }))}
-                >
-                  Stage 1
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, stage: "Stage 2" }))}
-                >
-                  Stage 2
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, stage: "Stage 3" }))}
-                >
-                  Stage 3
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {activeFilters.dateRange !== "All Time" ? activeFilters.dateRange : "Date"}
-                  <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, dateRange: "All Time" }))}
-                >
-                  All Time
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, dateRange: "Today" }))}
-                >
-                  Today
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, dateRange: "Yesterday" }))}
-                >
-                  Yesterday
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, dateRange: "Last 7 days" }))}
-                >
-                  Last 7 days
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setActiveFilters((prev) => ({ ...prev, dateRange: "Last 30 days" }))}
-                >
-                  Last 30 days
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <Card className=" shadow-sm border-slate-200 dark:border-slate-800 bg-[#E7FFFE] dark:bg-primary/5 ">
-          <CardHeader className="px-6 py-4">
-            <div className="flex justify-between items-center ">
-              <div >
-                <CardTitle className="text-lg ">Production Events Log</CardTitle>
-                <CardDescription>Historical record of all production line events</CardDescription>
+                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-medium">
+                  {filteredTransactions.length} entries
+                </div>
               </div>
-              <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-medium">
-                {filteredTransactions.length} entries
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="h-[calc(100vh-350px)] overflow-hidden">
-              <div className="h-full overflow-auto">
-                <Table className="relative" ref={tableRef}>
-                  <TableHeader className="sticky top-0 bg-[#E7FFFE] bg-[#E7FFF] dark:bg-slate-950 z-10">
-                    <TableRow className="hover:bg-slate-100  dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800">
-                      <TableHead className="w-[200px] font-semibold py-4 pl-4">Stage</TableHead>
-                      <TableHead className="w-[150px] font-semibold py-4 pl-5">Status</TableHead>
-                      <TableHead className="w-[150px] font-semibold py-4 pl-4">RFID Tag</TableHead>
-                      <TableHead className="w-[150px] font-semibold py-4 pl-4">Car Part</TableHead>
-                      <TableHead className="w-[200px] font-semibold py-4 pl-4">Timestamp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.length > 0 ? (
-                      filteredTransactions.map((tx) => (
-                        <TableRow
-                          key={tx.id}
-                          className={cn(
-                            "hover:bg-slate-50 dark:hover:bg-slate-100 transition-colors border-slate-200 dark:border-slate-800",
-                            tx.id === flashId ? "animate-flash" : "",
-                          )}
-                        >
-                          <TableCell className="font-medium py-3 px-4">
-                            <div className="flex items-center">
-                              <div
-                                className={cn("w-2 h-2 rounded-full mr-2", stageColors[tx.stage] || "bg-slate-500")}
-                              ></div>
-                              {tx.stage}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            <span
-                              className={cn(
-                                "px-3 py-1.5 rounded-full text-xs font-medium inline-flex items-center min-w-[100px] justify-center",
-                                statusColors[tx.status] ||
-                                  "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200",
-                              )}
-                            >
-                              {statusIcons[tx.status]}
-                              {tx.status}
-                              {tx.status === "RFID Scanned" && ` (${tx.action})`}
-                            </span>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm bg-slate-50/50 dark:bg-slate-900/50 py-3 px-4">
-                            {tx.rfidTag || "-"}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">{tx.carPart}</TableCell>
-                          <TableCell className="text-slate-600 dark:text-slate-400 py-3 px-4">{tx.timestamp}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow className="border-slate-200 dark:border-slate-800">
-                        <TableCell colSpan={5} className="text-center py-10 h-32">
-                          <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
-                            <Search className="h-10 w-10 mb-2 opacity-20" />
-                            <p className="text-lg font-medium">No matching logs found</p>
-                            <p className="text-sm">Try adjusting your search or filters</p>
-                          </div>
-                        </TableCell>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[calc(100vh-350px)] overflow-hidden">
+                <div className="h-full overflow-auto">
+                  <Table className="relative" ref={tableRef}>
+                    <TableHeader className="sticky top-0 bg-[#E7FFFE] bg-[#E7FFF] dark:bg-slate-950 z-10">
+                      <TableRow className="hover:bg-slate-100  dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800">
+                        <TableHead className="w-[200px] font-semibold py-4 pl-4">Stage</TableHead>
+                        <TableHead className="w-[150px] font-semibold py-4 pl-5">Status</TableHead>
+                        <TableHead className="w-[150px] font-semibold py-4 pl-4">RFID Tag</TableHead>
+                        <TableHead className="w-[200px] font-semibold py-4 pl-4">Timestamp</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((tx) => (
+                          <TableRow
+                            key={tx.id}
+                            className={cn(
+                              "hover:bg-slate-50 dark:hover:bg-slate-100 transition-colors border-slate-200 dark:border-slate-800",
+                              tx.id === flashId ? "animate-flash" : "",
+                            )}
+                          >
+                            <TableCell className="font-medium py-3 px-4">
+                              <div className="flex items-center">
+                                <div
+                                  className={cn("w-2 h-2 rounded-full mr-2", stageColors[tx.stage] || "bg-slate-500")}
+                                ></div>
+                                {tx.stage || "Unknown"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-4">
+                              <span
+                                className={cn(
+                                  "px-3 py-1.5 rounded-full text-xs font-medium inline-flex items-center min-w-[100px] justify-center",
+                                  statusColors[tx.status] ||
+                                    "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200",
+                                )}
+                              >
+                                {statusIcons[tx.status] || <Clock className="h-3 w-3 mr-1" />}
+                                {tx.status || "Unknown"}
+                                {tx.status === "RFID Scanned" && tx.action && ` (${tx.action})`}
+                              </span>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm bg-slate-50/50 dark:bg-slate-900/50 py-3 px-4">
+                              {tx.rfidTag || "-"}
+                            </TableCell>
+                            <TableCell className="text-slate-600 dark:text-slate-400 py-3 px-4">
+                              {tx.timestamp || ""}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow className="border-slate-200 dark:border-slate-800">
+                          <TableCell colSpan={4} className="text-center py-10 h-32">
+                            {isLoading ? (
+                              <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+                                <RefreshCw className="h-10 w-10 mb-2 animate-spin" />
+                                <p className="text-lg font-medium">Loading logs...</p>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+                                <Search className="h-10 w-10 mb-2 opacity-20" />
+                                <p className="text-lg font-medium">No matching logs found</p>
+                                <p className="text-sm">Try adjusting your search or filters</p>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-</div>
-          <footer className="bg-[#F2FDFF] dark:bg-primary/5 py-6 border-t border-slate-200 dark:border-slate-800">
+      <footer className="bg-[#F2FDFF] dark:bg-primary/5 py-6 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center mb-4 sm:mb-0">
