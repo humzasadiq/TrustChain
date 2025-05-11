@@ -23,6 +23,7 @@ import {
 import { cn } from "../lib/utils"
 import ToggleSwitch from "./ui/switch"
 import TrustChainIOTReadings from "./Readings"
+import ManufacturingFloorTracker from "./Assembly"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import {
   SidebarProvider,
@@ -283,6 +284,7 @@ export default function Dashboard() {
             </div>
             {/* Recent Transactions Table */}
             <TrustChainIOTReadings />
+            <ManufacturingFloorTracker/>
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
