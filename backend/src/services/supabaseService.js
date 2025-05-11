@@ -252,9 +252,9 @@ async function getItemInfo(uid) {
       .select('*')
       .eq('item_uid', uid) // Use uid, not item_details_id
       .maybeSingle();
-    return ({ detail_data, data })
+    return ({ ...data, ...detail_data })
   }
-  return data;
+  return {data};
 }
 
 // Fetch related order info from order_items table
@@ -286,7 +286,7 @@ const getOrders = async () => {
 }
 
 
-const orderCreation = async (name, car_rfid, description) => {
+const orderCreation = async (name, car_rfid, description, brand, engine_type, engine_cc, body_type, image) => {
   const { data: rfidItem, error: rfidError } = await supabase
     .from('rfid_items')
     .select('*')

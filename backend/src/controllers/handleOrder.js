@@ -67,14 +67,14 @@ const getAllOrders = async (req, res) => {
 }
 
 const createOrder = async (req, res) => {
-  const { name, car_rfid, description } = req.body;
+  const { name, car_rfid, description, brand, engine_type, engine_cc, body_type, image } = req.body;
 
-  if (!name || !car_rfid || !description) {
+  if (!name || !car_rfid ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const order = await orderCreation(name, car_rfid, description);
+    const order = await orderCreation(name, car_rfid, description, brand, engine_type, engine_cc, body_type, image);
     if (!order.error) {
       const orderTx = await logOrderToChain(order.oid.data.order_id, car_rfid);
       const orderAddressResult = await handleTransactionAddressForOrder(order.oid.data.order_id, orderTx)
