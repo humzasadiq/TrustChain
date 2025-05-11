@@ -11,7 +11,7 @@ export default function ProductionLineAnimation() {
     const [currentStage, setCurrentStage] = useState(null);
     const [stageStatus, setStageStatus] = useState({}); // For blinking effects
     const wsRef = useRef(null);
-    const ESP_IP = "192.168.100.45";
+    const ESP_IP = "192.168.100.36";
     const [flashId, setFlashId] = useState(null);
     const animationRef = useRef(null);
     const carRef = useRef(null);

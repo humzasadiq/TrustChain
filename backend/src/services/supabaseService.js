@@ -368,6 +368,23 @@ const handleTransactionAddressForOrder = async (oid, transaction_address) => {
 };
 
 
+const getAllEvents = async () => {
+  const { data, error } = await supabase
+    .from('stage_events')
+    .select('*')
+    .order('timestamp', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data || data.length === 0) {
+    return { error: 'No logs Found' };
+  }
+
+  return data;
+};
+
 module.exports = {
   logToSupabase,
   updateItemLocation,
@@ -383,4 +400,5 @@ module.exports = {
   handleTransactionAddressForOrder,
   signup,
   login,
+  getAllEvents
 };

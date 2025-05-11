@@ -1,4 +1,4 @@
-const { logToSupabase, updateItemLocation, logToOrderItems, handleTransactionAddressForItem } = require('../services/supabaseService');
+const { logToSupabase, updateItemLocation, logToOrderItems, handleTransactionAddressForItem , getAllEvents} = require('../services/supabaseService');
 const { logToBlockchain, logItemToChain } = require('../services/blockchainService');
 
 const handleStage = async (req, res) => {
@@ -30,4 +30,15 @@ const handleStage = async (req, res) => {
   }
 };
 
-module.exports = { handleStage };
+
+const getStageEvents = async(req, res) => {
+  try {
+    const eventResult = await getAllEvents();
+    console.log(eventResult)
+    return res.json({ success: true, eventResult });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error getting logs');
+  }
+}
+module.exports = { handleStage, getStageEvents };
