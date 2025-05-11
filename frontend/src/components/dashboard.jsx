@@ -169,7 +169,7 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showHint, setShowHint] = useState(true) // Add state for hint visibility
+  const [showHint, setShowHint] = useState(true)
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -257,7 +257,7 @@ function SearchInput({ selectedMode, setSelectedMode, searchString, setSearchStr
   }
 
   return (
-    <div className="space-y-2 pt-30 bg-[#F2FDFF] dark:bg-primary/0.5">
+    <div className="space-y-2 bg-[#F2FDFF] dark:bg-primary/0.5">
       <form onSubmit={handleSearch} className="flex h-9 w-100">
         <div className={`flex flex-1 items-center rounded-l-md border shadow-sm border-r-0 border-gray-500 bg-background px-3 py-1 text-sm ring-offset-background relative`}>
           <input
@@ -340,7 +340,7 @@ export default function Dashboard() {
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F2FDFF] dark:bg-primary/2">
           
           <div className="p-4 md:p-6 w-full">
-            <div className="flex items-center justify-between mb-6 ">
+            <div className="flex items-center justify-between mb-6 mt-16">
               
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-6 w-6" />
@@ -348,21 +348,18 @@ export default function Dashboard() {
               </div>
               <SearchInput selectedMode={selectedMode} setSelectedMode={setSelectedMode} searchString={searchString} setSearchString={setSearchString} />
             </div>
-            {/* Recent Transactions Table */}
-            {/* <TrustChainIOTReadings /> */}
-            <LiveBlock />
-            <ManufacturingFloorLayout/>
-            
+
             {/* Stats Cards */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
             {/* <Card className={"p-0 m-0 dark:bg-black"}>
                 <CardContent>
                   <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0 " />
                 </CardContent>
               </Card> */}
+              <CountTransactions/>
               <IPStatusMonitor/>
               
-              <CountTransactions/>
+              
               {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Revenue</CardTitle>
@@ -397,6 +394,14 @@ export default function Dashboard() {
                 </CardContent>
               </Card> */}
             </div>
+
+            {/* Recent Transactions Table */}
+            {/* <TrustChainIOTReadings /> */}
+            <ManufacturingFloorLayout/>
+            <LiveBlock />
+            
+            
+            
 
             {/* Charts */}
             {/* <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
