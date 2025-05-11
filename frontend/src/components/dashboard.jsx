@@ -79,6 +79,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Button } from "./ui/button"
 import IPStatusMonitor from "./IpStatusMonitor"
 import CountTransactions from "./CountTransactions"
+import ManufacturingFloorLayout from "./Assembly"
 
 
 // Sample data for charts
@@ -350,6 +351,8 @@ export default function Dashboard() {
             {/* Recent Transactions Table */}
             {/* <TrustChainIOTReadings /> */}
             <LiveBlock />
+            <ManufacturingFloorLayout/>
+            
             {/* Stats Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {/* <Card className={"p-0 m-0 dark:bg-black"}>
