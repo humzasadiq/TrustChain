@@ -315,8 +315,31 @@ const orderCreation = async (name, car_rfid, description) => {
     return { error: 'Error inserting into orders', details: orderInsertError };
   }
 
-  return { success: true, message: 'Order created successfully' };
+  const oid = await supabase
+  .from('orders')
+  .select('order_id')
+  .eq('car_rfid', car_rfid)
+  .single();
+
+  return { success: true, message: 'Order created successfully', oid };
 }
+
+const handleTransactionAddressForOrder = async (oid, transaction_address) => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ transaction_address })
+      .eq('order_id', oid);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, message: 'Server error', error: err.message };
+  }
+};
 
 module.exports = {
   logToSupabase,
@@ -330,5 +353,6 @@ module.exports = {
   getOrders,
   getItemInfo,
   getItemOrderInfo,
-  orderCreation
+  orderCreation,
+  handleTransactionAddressForOrder
 };

@@ -1,4 +1,5 @@
-const { getOrder, getItemsForOrder, getOrders, orderCreation } = require('../services/supabaseService');
+const { getOrder, getItemsForOrder, getOrders, orderCreation, handleTransactionAddressForOrder } = require('../services/supabaseService');
+const { logOrderToChain } = require('../services/blockchainService');
 
 const getOrderItems = async (req, res) => {
   try {
@@ -73,11 +74,22 @@ const createOrder = async (req, res) => {
   }
 
   try {
-    const orders = await orderCreation(name, car_rfid, description);
+    const order = await orderCreation(name, car_rfid, description);
+    if (!order.error) {
+      const orderTx = await logOrderToChain(order.oid.data.order_id, car_rfid);
+      const orderAddressResult = await handleTransactionAddressForOrder(order.oid.data.order_id, orderTx)
+      return res.status(200).json({
+        success: true,
+        order,
+        orderTx,
+        orderAddressResult
+      });
+    }
     return res.status(200).json({
       success: true,
-      orders
+      order
     });
+
 
   } catch (err) {
     return res.status(500).json({

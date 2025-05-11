@@ -10,7 +10,7 @@ router.post('/get-item', getItem);
 
 router.post('/stage-event', handleStage);
 router.post('/get-order', getOrderID);
-// router.post('/get-item', getItem);
+router.post('/get-item', getItem);
 router.post('/get-order-items', getOrderItems);
 router.get('/get-all-orders', getAllOrders);
 router.post('/create-order', createOrder);
