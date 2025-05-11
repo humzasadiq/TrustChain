@@ -11,7 +11,6 @@ const logToSupabase = async (uid, stage, status, transaction_address) => {
   const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
 
   const { data, error } = await supabase.from('stage_events').insert([
-    // { uid, stage, status, timestamp: new Date().toISOString() }
     { uid, stage, status, timestamp: formattedDate, transaction_address }
   ]);
   if (error) throw error;
@@ -219,6 +218,23 @@ const getOrder = async (uid) => {
   return data.order_id;
 };
 
+const getDetailsForOrder = async(oid) => {
+  const { data, error } = await supabase
+  .from('orders')
+  .select('*')
+  .eq('order_id', oid)
+  .single();
+
+  if (error) {
+    throw new Error(`Error checking order existence: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error('Invalid RFID tag for order');
+  }
+  return data;
+}
+
 // Fetch item info from rfid_items table
 async function getItemInfo(uid) {
   const { data, error } = await supabase
@@ -228,6 +244,15 @@ async function getItemInfo(uid) {
     .single();
 
   if (error) throw new Error(error.message);
+
+  if (data.item_details_id) {
+    const { data: detail_data, error: detail_error } = await supabase
+      .from('item_details')
+      .select('*')
+      .eq('item_uid', uid) // Use uid, not item_details_id
+      .maybeSingle();
+    return ({ detail_data, data })
+  }
   return data;
 }
 
@@ -316,10 +341,10 @@ const orderCreation = async (name, car_rfid, description) => {
   }
 
   const oid = await supabase
-  .from('orders')
-  .select('order_id')
-  .eq('car_rfid', car_rfid)
-  .single();
+    .from('orders')
+    .select('order_id')
+    .eq('car_rfid', car_rfid)
+    .single();
 
   return { success: true, message: 'Order created successfully', oid };
 }
@@ -341,6 +366,7 @@ const handleTransactionAddressForOrder = async (oid, transaction_address) => {
   }
 };
 
+
 module.exports = {
   logToSupabase,
   updateItemLocation,
@@ -349,6 +375,7 @@ module.exports = {
   signup,
   login,
   getOrder,
+  getDetailsForOrder,
   getItemsForOrder,
   getOrders,
   getItemInfo,

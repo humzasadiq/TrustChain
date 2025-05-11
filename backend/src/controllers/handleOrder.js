@@ -1,4 +1,4 @@
-const { getOrder, getItemsForOrder, getOrders, orderCreation, handleTransactionAddressForOrder } = require('../services/supabaseService');
+const { getOrder, getItemsForOrder, getOrders, orderCreation, handleTransactionAddressForOrder, getDetailsForOrder } = require('../services/supabaseService');
 const { logOrderToChain } = require('../services/blockchainService');
 
 const getOrderItems = async (req, res) => {
@@ -99,4 +99,27 @@ const createOrder = async (req, res) => {
   }
 }
 
-module.exports = { getOrderID, getOrderItems, getAllOrders, createOrder };
+const getOrderDetails = async(req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Missing orderId in request' });
+    }
+
+    const details = await getDetailsForOrder(orderId);
+
+    return res.status(200).json({
+      success: true,
+      details
+    });
+
+  } catch (err) {
+    return res.status(isNotFound ? 404 : 500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+module.exports = { getOrderID, getOrderItems, getAllOrders, createOrder, getOrderDetails };
