@@ -319,12 +319,12 @@ export default function Order() {
           </div>
 
           {/* Right side - 3D canvas */}
-          {/* <div className="h-full rounded-lg overflow-hidden shadow-lg">
+          <div className="h-full rounded-lg overflow-hidden shadow-lg">
             <div
               ref={containerRef}
               className="w-full h-full bg-gradient-to-br from-[#E7FFFE] to-[#F2FDFF] dark:from-primary/5 dark:to-black/20"
             />
-          </div> */}
+          </div>
         </div>
       </div>
 
