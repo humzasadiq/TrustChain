@@ -335,7 +335,7 @@ const orderCreation = async (name, car_rfid, description, brand, engine_type, en
   const formattedDate = karachiTime.toFormat('yyyy-MM-dd HH:mm:ss');
   const { error: orderInsertError } = await supabase
     .from('orders')
-    .insert({ car_rfid, name, description, status: "incomplete", created_at: formattedDate });
+    .insert({ car_rfid, name, description, status: "incomplete", created_at: formattedDate, brand, engine_type, engine_cc, body_type, image });
 
   if (orderInsertError) {
     return { error: 'Error inserting into orders', details: orderInsertError };
