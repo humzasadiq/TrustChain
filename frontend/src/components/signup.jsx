@@ -58,7 +58,7 @@ export default function Signup() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-between min-h-screen bg-[#F2FDFF] dark:bg-primary/2 pt-30">
+      <div className="flex flex-col items-center justify-between min-h-screen bg-[#F2FDFF] dark:bg-primary/2 pt-18">
         <div className="mx-auto max-w-sm w-full px-4 py-6">
           <div className="border p-6 rounded-lg shadow-sm space-y-4 bg-[#E7FFFE] dark:bg-primary/5">
             <div className="space-y-2 text-center">

@@ -6,6 +6,7 @@ import { Label } from "./ui/label";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -30,9 +31,11 @@ export default function Login() {
         // Add a slightly longer delay to ensure token is properly set
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
+          toast.success("Login successful!");
         }, 300);
       } else {
         setError(result.message || "Login failed");
+        toast.error(result.message || "Login failed");
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -44,7 +47,7 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-between min-h-screen bg-[#F2FDFF] dark:bg-primary/2 pt-45">
+      <div className="flex flex-col items-center justify-between min-h-screen bg-[#F2FDFF] dark:bg-primary/2 pt-18">
         <div className="mx-auto max-w-sm w-full px-4 py-6">
           <div className="border p-6 rounded-lg shadow-sm space-y-4 bg-[#E7FFFE] dark:bg-primary/5">
             <div className="space-y-2 text-center">
