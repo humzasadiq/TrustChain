@@ -23,7 +23,6 @@ function App() {
   };
 
   return (
-    <SmoothScroll>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
         <AuthProvider>
@@ -53,7 +52,6 @@ function App() {
         </AuthProvider>
       </Router>
     </ThemeProvider>
-    </SmoothScroll>
   )
 }
 
