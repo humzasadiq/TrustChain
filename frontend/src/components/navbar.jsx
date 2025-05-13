@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront, Warehouse } from "lucide-react"
+import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront, Warehouse, CircleUserRound } from "lucide-react"
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
@@ -116,6 +116,16 @@ export default function Navbar() {
               <Info className="h-4 w-4" />
               About
             </Link>
+            <Link
+              to="/contact"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/contact") && "text-primary",
+              )}
+            >
+              <CircleUserRound className="h-4 w-4" />
+              Contact
+            </Link>
           </nav>
         </div>
 
@@ -187,6 +197,14 @@ export default function Navbar() {
             >
               <Info className="h-5 w-5" />
               About
+            </Link>
+            <Link
+              to="/contact"
+              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/contact") && "bg-muted")}
+              onClick={toggleMenu}
+            >
+              <CircleUserRound className="h-5 w-5" />
+              Contact
             </Link>
             <div className="flex flex-col gap-2 pt-2 border-t">
               <div className="p-2">

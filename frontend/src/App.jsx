@@ -16,6 +16,7 @@ import Inventory from "./components/inventory"
 import Order from "./components/order"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./context/AuthContext"
+import { Contact } from "./components/ui"
 
 function App() {
   const AuthCallback = () => {
@@ -47,6 +48,7 @@ function App() {
               <Route path="/logs" element={<Logging />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/sad" element={<Order />} />
+            <Route path="/contact" element={<Contact />} />
             </Route>
 
           </Routes>
