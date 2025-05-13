@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
 
@@ -14,6 +14,23 @@ const Contact = () => {
     email: "",
     message: "",
   });
+
+  useEffect(() => {
+
+    const fetchUser = async () =>{ 
+    const response = await fetch("http://localhost:5000/api/get-user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        const data = await response.json();
+        setForm({...form, email : data.email, name: data.username})
+    }
+    fetchUser();
+  }, []);
+
 
   const [loading, setLoading] = useState(false);
 

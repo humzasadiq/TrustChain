@@ -416,6 +416,24 @@ const getOrderWithUID = async (uid) => {
   return data;
 }
 
+const getUserfromDB = async (id) => {
+    const { data, error } = await supabase
+  .from('users')
+  .select('id, username, email, created_at')
+  .eq('id', id)
+  .single();
+
+    if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data || data.length === 0) {
+    return { error: 'No user Found' };
+  }
+
+  return data;
+}
+
 module.exports = {
   logToSupabase,
   updateItemLocation,
@@ -433,5 +451,6 @@ module.exports = {
   login,
   getAllEvents,
   getItems,
-  getOrderWithUID
+  getOrderWithUID,
+  getUserfromDB
 };

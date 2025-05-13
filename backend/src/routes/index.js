@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { handleStage, getStageEvents } = require('../controllers/handleStageEntry');
 const { getOrderID, getOrderItems, getAllOrders, createOrder, getOrderDetails, getOrderByUID } = require('../controllers/handleOrder');
-const { logInUser, signUpUser } = require('../controllers/auth');
+const { logInUser, signUpUser, getUser } = require('../controllers/auth');
 const { body } = require('express-validator');
 const { getItem, getInventory } = require('../controllers/handleItem');
+const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
 router.post('/get-item', getItem);
@@ -44,6 +45,8 @@ router.get('/profile', (req, res) => {
         }
     });
 });
+
+router.post('/get-user', authenticateToken, getUser);
 
 router.post('/stage-event', handleStage);
 router.post('/get-order', getOrderID);

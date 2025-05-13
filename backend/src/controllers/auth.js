@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator');
-const { signup, login } = require('../services/supabaseService');
+const { signup, login, getUserfromDB } = require('../services/supabaseService');
 
 
 const signUpUser = async (req, res) => {
@@ -54,4 +54,15 @@ const logInUser = async (req, res) => {
   }
 };
 
-module.exports = { logInUser, signUpUser};
+const getUser = async(req, res) => {
+   try {
+        const userID = req.user;
+        const user = await getUserfromDB(userID);
+        res.send(user)
+    } catch (error) {
+        console.error(error.message)
+        res.status(500).send("Internal Server error occured")
+    }
+}
+
+module.exports = { logInUser, signUpUser, getUser};
