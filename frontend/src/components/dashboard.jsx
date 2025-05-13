@@ -4,8 +4,14 @@ import { useState , useEffect, useRef, use } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import jobServices from "../services/api"
 import { useAuth } from "../context/AuthContext"
-
 import { toast } from "sonner"
+
+// Import new dashboard widgets
+import { 
+  RecentEvents, 
+  BrandDistribution, 
+} from "./dashboard/index"
+
 import {
   Select,
   SelectContent,
@@ -81,7 +87,6 @@ import { Button } from "./ui/button"
 import IPStatusMonitor from "./IpStatusMonitor"
 import CountTransactions from "./CountTransactions"
 import ManufacturingFloorLayout from "./Assembly"
-
 
 // Sample data for charts
 const lineChartData = [
@@ -361,135 +366,23 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4 ">
-            {/* <Card className={"p-0 m-0 dark:bg-black"}>
-                <CardContent>
-                  <img src="/loop.gif" alt="image" className="w-full h-full object-cover rounded-xl invert dark:invert-0 " />
-                </CardContent>
-              </Card> */}
-              <CountTransactions/>
-              <IPStatusMonitor/>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
+              <CountTransactions />
+              <RecentEvents />
+              <IPStatusMonitor />
+              <BrandDistribution />
               
-              
-              {/* <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                  <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">$45,231.89</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      +18.2%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </CardContent>
-              </Card> */}
-
-              {/* <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">24</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-rose-500 flex items-center">
-                      <ArrowDownRight className="mr-1 h-3 w-3" />
-                      -4.5%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </CardContent>
-              </Card> */}
             </div>
 
-            {/* Recent Transactions Table */}
-            {/* <TrustChainIOTReadings /> */}
-            {/* <ManufacturingFloorLayout/> */}
             <LiveBlock />
-            
-            
-            
 
-            {/* Charts */}
-            {/* <div className="mt-6 grid gap-4 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transaction Overview</CardTitle>
-                  <CardDescription>Transaction volume over the last 30 days</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={lineChartData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        dot={false}
-                        activeDot={{ r: 6, style: { fill: "hsl(var(--primary))", opacity: 0.2 } }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-              <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
-                <CardHeader>
-                  <CardTitle>Distribution by Type</CardTitle>
-                  <CardDescription>Transaction types breakdown</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Pie
-                        data={pieChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {pieChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div> */}
-
-            {/* Weekly Activity Bar Chart */}
-            {/* <div className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Weekly Activity</CardTitle>
-                  <CardDescription>Transaction activity by day of week</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barChartData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div> */}
+            {/* Recent Events Timeline & Brand Distribution */}
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mb-4">
+              
+              
+            </div>
+            
+            
           </div>
         </div>
       {/* </div> */}

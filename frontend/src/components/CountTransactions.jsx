@@ -94,10 +94,10 @@ export default function CountTransactions() {
           </div>
         ) : (
           <>
-            <div className="text-2xl font-bold">{stats.totalTransactions}</div>
+            <div className="mt-15 text-5xl font-bold flex justify-center items-center">{stats.totalTransactions}</div>
             <div className="flex flex-col space-y-1">
-              <p className="text-xs text-muted-foreground">
-                <span className={`flex items-center ${stats.isIncrease ? "text-emerald-500" : "text-red-500"}`}>
+              <p className="text-md text-muted-foreground text-center">
+                <span className={`flex items-center justify-center ${stats.isIncrease ? "text-emerald-500" : "text-red-500"}`}>
                   {stats.isIncrease ? (
                     <ArrowUpRight className="mr-1 h-3 w-3" />
                   ) : (

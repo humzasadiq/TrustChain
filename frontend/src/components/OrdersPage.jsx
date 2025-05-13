@@ -315,7 +315,7 @@ const OrdersPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Link to={`/order/${order.order_id}`}>
+                          <Link target="_blank" to={`/order/${order.order_id}`}>
                             <Button variant="ghost" size="icon">
                               <Eye className="h-4 w-4" />
                             </Button>
