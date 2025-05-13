@@ -83,7 +83,7 @@ export default function CountTransactions() {
   return (
     <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+        <CardTitle className="text-lg font-medium">Part Transactions</CardTitle>
         <Activity className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
