@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Progress } from "./ui/progress"
-import { Calendar, Clock, Package, Cog, CheckCircle2, AlertCircle, Printer } from "lucide-react"
+import { Calendar, Clock, Package, Cog, CheckCircle2, AlertCircle, Printer, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import jobServices from "../services/api"
+import QRCode from 'react-qr-code'
 
 export default function Details({ type }) {
   const { id } = useParams()
@@ -163,9 +164,24 @@ export default function Details({ type }) {
                   <span className="font-medium">{formatTimestamp(data.partorderInfo.timestamp)}</span>
                 </div>
                 {data.partorderInfo.transaction_address && (
-                  <div className="flex justify-between flex-wrap">
+                  <div className="flex justify-between flex-wrap items-center gap-2">
                     <span className="text-muted-foreground">Blockchain Transaction Address</span>
-                    <span className="font-medium wrap-anywhere">{data.partorderInfo.transaction_address}</span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="font-medium text-xs break-all">{data.partorderInfo.transaction_address}</span>
+                      <div className="p-2 bg-white rounded-md">
+                        <QRCode 
+                          value={`https://sepolia.etherscan.io/tx/${data.partorderInfo.transaction_address}`}
+                          size={300}
+                          level="M"
+                        />
+                        <button 
+                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                          onClick={() => window.open(`https://sepolia.etherscan.io/tx/${data.partorderInfo.transaction_address}`, '_blank')}
+                        >
+                          View on Etherscan <ExternalLink className="h-3 w-3" />
+                      </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -223,9 +239,24 @@ export default function Details({ type }) {
                 <span className="font-medium">{data.orderDetails.description || "N/A"}</span>
               </div>
               {data.orderDetails.transaction_address && (
-                <div className="flex justify-between flex-wrap">
+                <div className="flex justify-between flex-wrap items-center gap-2">
                   <span className="text-muted-foreground">Blockchain Transaction</span>
-                  <span className="font-medium text-xs break-all">{data.orderDetails.transaction_address}</span>
+                  <div className="flex justify-center flex-wrap items-center gap-2">
+                    <span className="font-medium text-xs break-all">{data.orderDetails.transaction_address}</span>
+                    <div className="p-2 bg-white rounded-md">
+                      <QRCode 
+                        value={`https://sepolia.etherscan.io/tx/${data.orderDetails.transaction_address}`}
+                        size={300}
+                        level="M"
+                      />
+                      <button 
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                        onClick={() => window.open(`https://sepolia.etherscan.io/tx/${data.orderDetails.transaction_address}`, '_blank')}
+                      >
+                        View on Etherscan <ExternalLink className="h-3 w-3" />
+                    </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -343,6 +374,7 @@ export default function Details({ type }) {
                   <TableHead>Stage</TableHead>
                   <TableHead>Installation Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Transaction</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -365,11 +397,30 @@ export default function Details({ type }) {
                           {item.stage.toLowerCase().includes("complete") ? "Installed" : "In Progress"}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {item.transaction_address && (
+                          <div className="flex flex-col gap-2 items-center">
+                            <div className="p-1 bg-white rounded-md">
+                              <QRCode 
+                                value={`https://sepolia.etherscan.io/tx/${item.transaction_address}`}
+                                size={80}
+                                level="M"
+                              />
+                            </div>
+                            <button 
+                              className="text-xs text-blue-600 hover:underline"
+                              onClick={() => window.open(`https://sepolia.etherscan.io/tx/${item.transaction_address}`, '_blank')}
+                            >
+                              View <ExternalLink className="h-3 w-3 inline" />
+                            </button>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
+                    <TableCell colSpan={6} className="text-center py-4">
                       No parts have been assigned to this order yet.
                     </TableCell>
                   </TableRow>
