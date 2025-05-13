@@ -195,21 +195,21 @@ const OrdersPage = () => {
         </div>
 
         {/* Filters and search */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-[#E7FFFE] dark:bg-primary/5">
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search orders..."
-                  className="pl-10"
+                  className="pl-10 bg-[#F2FDFF] dark:bg-background"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-[#F2FDFF] dark:bg-background">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -224,7 +224,7 @@ const OrdersPage = () => {
                 setSortField(value);
                 setSortDirection("asc");
               }}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-[#F2FDFF] dark:bg-background">
                   {sortDirection === "asc" ? <SortAsc className="h-4 w-4 mr-2" /> : <SortDesc className="h-4 w-4 mr-2" />}
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -240,7 +240,7 @@ const OrdersPage = () => {
         </Card>
 
         {/* Orders table */}
-        <Card>
+        <Card className={"bg-[#E7FFFE] dark:bg-primary/5"}>
           <CardHeader>
             <CardTitle>All Orders</CardTitle>
             <CardDescription>
