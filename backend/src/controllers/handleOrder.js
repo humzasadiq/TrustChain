@@ -8,6 +8,7 @@ const {
   getOrderWithUID
 } = require("../services/supabaseService")
 const { logOrderToChain } = require("../services/blockchainService")
+const { uploadFile } = require("../services/storageService")
 
 const getOrderItems = async (req, res) => {
   try {
@@ -72,14 +73,30 @@ const getAllOrders = async (req, res) => {
 }
 
 const createOrder = async (req, res) => {
-  const { name, car_rfid, description, brand, engine_type, engine_cc, body_type, image } = req.body
-
-  if (!name || !car_rfid) {
-    return res.status(400).json({ error: "Missing required fields" })
-  }
-
   try {
-    const order = await orderCreation(name, car_rfid, description, brand, engine_type, engine_cc, body_type, image)
+    const { name, car_rfid, description, brand, engine_type, engine_cc, body_type } = req.body
+    const carImage = req.file
+
+    if (!name || !car_rfid) {
+      return res.status(400).json({ error: "Missing required fields" })
+    }
+
+    // Handle image upload if exists
+    let imageUrl = null
+    if (carImage) {
+      const uploadResult = await uploadFile(carImage, 'car', 'orders')
+      
+      if (!uploadResult.success) {
+        console.error('Image upload failed:', uploadResult.error)
+        // Continue with order creation even if image upload fails
+      } else {
+        imageUrl = uploadResult.publicUrl
+        console.log('Image uploaded successfully:', uploadResult)
+      }
+    }
+
+    const order = await orderCreation(name, car_rfid, description, brand, engine_type, engine_cc, body_type, imageUrl)
+    
     if (!order.error) {
       const orderTx = await logOrderToChain(order.oid.data.order_id, car_rfid)
       const orderAddressResult = await handleTransactionAddressForOrder(order.oid.data.order_id, orderTx)

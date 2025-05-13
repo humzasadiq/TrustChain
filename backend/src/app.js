@@ -4,6 +4,31 @@ const app = express();
 const routes = require('./routes');
 const cors = require('cors');
 const ipMonitorRoutes = require('../routes/ipMonitor');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    const filetypes = /jpeg|jpg|png|gif|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed'));
+  }
+});
+
+// Make multer available to route handlers
+app.locals.upload = upload;
 
 // Middleware
 app.use(cors());

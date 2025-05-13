@@ -57,9 +57,13 @@ export default function Order() {
       const formDataToSend = new FormData();
       
       // Add all text fields
-      Object.keys(formData).forEach(key => {
-        formDataToSend.append(key, formData[key]);
-      });
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("car_rfid", formData.rfid);
+      formDataToSend.append("brand", formData.brand);
+      formDataToSend.append("body_type", formData.bodyType || "");
+      formDataToSend.append("engine_type", formData.engineType || "");
+      formDataToSend.append("engine_cc", formData.enginecc || "");
+      formDataToSend.append("description", formData.description || "");
       
       // Add the image file if exists
       if (imageFile) {
@@ -73,7 +77,8 @@ export default function Order() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create order');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create order');
       }
 
       const data = await response.json();
@@ -234,13 +239,31 @@ export default function Order() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="engineType">Engine CC</Label>
+                    <Label htmlFor="engineType">Engine Type</Label>
+                    <Select
+                      value={formData.engineType}
+                      onValueChange={(value) => handleSelectChange(value, 'engineType')}
+                    >
+                      <SelectTrigger className="w-full border border-gray-500">
+                        <SelectValue placeholder="Select engine type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="petrol">Petrol</SelectItem>
+                          <SelectItem value="diesel">Diesel</SelectItem>
+                          <SelectItem value="electric">CNG</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="enginecc">Engine CC</Label>
                     <Input 
-                      id="engineType" 
-                      name="engineType" 
-                      value={formData.engineType} 
+                      id="enginecc" 
+                      name="enginecc" 
+                      value={formData.enginecc} 
                       onChange={handleChange}
-                      placeholder="Enter engine type"
+                      placeholder="Enter engine cc"
                       type="number"
                       min="1000"
                       max="5000"

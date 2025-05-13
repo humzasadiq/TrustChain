@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront, Warehouse, CircleUserRound } from "lucide-react"
+import { LayoutDashboard, LogIn, Menu, X, History, Info, Layers, CarFront, Warehouse, CircleUserRound, Package, PlusCircle } from "lucide-react"
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
@@ -97,15 +97,25 @@ export default function Navbar() {
               Inventory
             </Link>
             <Link
+              to="/adar"
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
+                isActive("/orders") && "text-primary",
+              )}
+            >
+              <Package className="h-4 w-4" />
+              Orders
+            </Link>
+            {/* <Link
               to="/sad"
               className={cn(
                 "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary",
                 isActive("/about") && "text-primary",
               )}
             >
-              <CarFront className="h-4 w-4" />
-              Order
-            </Link>
+              <PlusCircle className="h-4 w-4" />
+              New Order
+            </Link> */}
             <Link
               to="/about"
               className={cn(
@@ -190,6 +200,22 @@ export default function Navbar() {
               <Warehouse className="h-5 w-5" />
               Inventory
             </Link>
+            <Link
+              to="/adar"
+              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/orders") && "bg-muted")}
+              onClick={toggleMenu}
+            >
+              <Package className="h-5 w-5" />
+              Orders
+            </Link>
+            {/* <Link
+              to="/sad"
+              className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/sad") && "bg-muted")}
+              onClick={toggleMenu}
+            >
+              <PlusCircle className="h-5 w-5" />
+              New Order
+            </Link> */}
             <Link
               to="/about"
               className={cn("flex items-center gap-2 p-2 rounded-md hover:bg-muted", isActive("/about") && "bg-muted")}
