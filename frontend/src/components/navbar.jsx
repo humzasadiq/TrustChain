@@ -14,6 +14,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { isAuthenticated, logout } = useAuth();
+  const [user, setUser] = useState('');
 
   // Add scroll event listener to track when page is scrolled
   useEffect(() => {
@@ -33,6 +34,25 @@ export default function Navbar() {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUser = async () => {
+        const response = await fetch("http://localhost:5000/api/get-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "authorization": `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        setUser(data.username);
+      }
+      fetchUser();
+    }
+  }, [isAuthenticated]
+
+  )
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -136,6 +156,7 @@ export default function Navbar() {
 
         {/* Auth buttons - Right aligned */}
         <div className="hidden md:flex items-center gap-2 ml-auto">
+          <div>{user}</div>
           <ThemeToggle />
           {isAuthenticated() ? (
             <Button variant="outline" size="sm" onClick={() => {
