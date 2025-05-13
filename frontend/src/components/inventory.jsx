@@ -59,11 +59,11 @@ export default function InventoryPage() {
                 </CardHeader>
                 <CardContent>
                     {groupedByStage[stageLabel]?.length > 0 ? ( // Check for this exact stage label
-                        <div className="flex flex-wrap gap-3 cursor-pointer">
+                        <div className="flex flex-wrap gap-3 cursor-pointer ">
                             {groupedByStage[stageLabel].map((item) => (
                                 <Badge
                                     key={item.id}
-                                    className="px-3 py-1 text-sm font-mono bg-amber-300"
+                                    className="px-3 py-1 text-sm font-mono bg-amber-200 dark:bg-amber-400 dark:text-white  text-black"
                                     // onClick={() => {
                                     //     window.location.href = `http://localhost:5173/part/${encodeURIComponent(item.uid)}`;
                                     // }}
@@ -82,7 +82,7 @@ export default function InventoryPage() {
     }
 
     return (
-        <div className="container mx-auto py-10 px-4 mt-10">
+        <div className="container mx-auto py-10 px-4 mt-10 ">
             <h1 className="text-3xl mb-4 flex items-center gap-2 font-bold"> <Warehouse />Inventory Overview</h1>
             {loading ? (
                 <p className="text-muted-foreground">Loading inventory...</p>
