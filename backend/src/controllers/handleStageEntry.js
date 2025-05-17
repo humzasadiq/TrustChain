@@ -8,12 +8,11 @@ const handleStage = async (req, res) => {
 
     // Retrieve the last stage event for the uid
     const lastEvent = await getLastStageEvent(uid);
-    if (!lastEvent) {
+    if (lastEvent.error) {
       return res.status(400).json({ success: false, message: 'No previous stage event found for this uid.' });
     }
 
     const itemOrOrder = await getItemOrOrder(uid);
-    console.log(itemOrOrder);
 
     // For orders, enforce sequential stage transitions
     if (itemOrOrder.message == "Tag is Order") {
@@ -21,7 +20,7 @@ const handleStage = async (req, res) => {
       const lastStageIndex = orderStages.indexOf(lastEvent.stage);
       const newStageIndex = orderStages.indexOf(stage);
 
-      if (newStageIndex !== lastStageIndex + 1) {
+      if (newStageIndex !== lastStageIndex + 1 && status == "Present") {
         console.log('Orders must move sequentially through stages.')
         return res.status(400).json({ success: false, message: 'Orders must move sequentially through stages.' });
       }

@@ -444,7 +444,7 @@ const getLastStageEvent = async (uid) => {
     .single();
 
   if (error) {
-    throw new Error(`Error fetching last stage event: ${error.message}`);
+    return {error: "No stage events found"}
   }
 
   return data;
