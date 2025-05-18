@@ -9,15 +9,28 @@ const handleStage = async (req, res) => {
     // Retrieve the last stage event for the uid
     const lastEvent = await getLastStageEvent(uid);
     if (lastEvent.error) {
-      return res.status(400).json({ success: false, message: 'No previous stage event found for this uid.' });
+      lastEvent = { status: 'Left', stage: 'Stage 0 (Pre-Stage)'}
+      // return res.status(400).json({ success: false, message: 'No previous stage event found for this uid.' });
     }
 
     const itemOrOrder = await getItemOrOrder(uid);
 
+    // For items, require exit from previous stage before entering a new stage
+    if (lastEvent.status !== 'Left' && status == 'Present') {
+      console.log('Previous stage must be exited before entering a new stage.')
+      return res.status(400).json({ success: false, message: 'Previous stage must be exited before entering a new stage.' });
+    }
+
+    if (lastEvent.status == 'Left' && status == 'Left') {
+      console.log('Can\'t exit stage before entering a stage.')
+      return res.status(400).json({ success: false, message: 'Can\'t exit stage before entering a new stage.' });
+    }
+
     // For orders, enforce sequential stage transitions
     if (itemOrOrder.message == "Tag is Order") {
-      const orderStages = ['Stage 1', 'Stage 2', 'Stage 3'];
+      const orderStages = ['Stage 0 (Pre-Stage)', 'Stage 1 (Store)', 'Stage 2 (Sub-Assembly)', 'Stage 3 (Design)'];
       const lastStageIndex = orderStages.indexOf(lastEvent.stage);
+
       const newStageIndex = orderStages.indexOf(stage);
 
       if (newStageIndex !== lastStageIndex + 1 && status == "Present") {
@@ -26,11 +39,6 @@ const handleStage = async (req, res) => {
       }
     }
 
-    // For items, require exit from previous stage before entering a new stage
-    if (lastEvent.status !== 'Left' && status == 'Present') {
-      console.log('Previous stage must be exited before entering a new stage.')
-      return res.status(400).json({ success: false, message: 'Previous stage must be exited before entering a new stage.' });
-    }
 
     const itemLocationResult = await updateItemLocation(uid, stage, action);
     const blockchainTx = await logToBlockchain(uid, stage, status);
@@ -54,7 +62,7 @@ const handleStage = async (req, res) => {
 };
 
 
-const getStageEvents = async(req, res) => {
+const getStageEvents = async (req, res) => {
   try {
     const eventResult = await getAllEvents();
     return res.json({ success: true, eventResult });
