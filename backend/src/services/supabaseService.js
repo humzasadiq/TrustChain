@@ -434,6 +434,37 @@ const getUserfromDB = async (id) => {
   return data;
 }
 
+const getLastStageEvent = async (uid) => {
+  const { data, error } = await supabase
+    .from('stage_events')
+    .select('*')
+    .eq('uid', uid)
+    .order('timestamp', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    return {error: "No stage events found"}
+  }
+
+  return data;
+};
+
+const getItemOrOrder = async(uid) => {
+    const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('car_rfid', uid)
+    .single()
+
+  if (error) {
+    return {message: "Tag is Item"}
+  }
+
+  return {message: "Tag is Order"};
+
+}
+
 module.exports = {
   logToSupabase,
   updateItemLocation,
@@ -452,5 +483,7 @@ module.exports = {
   getAllEvents,
   getItems,
   getOrderWithUID,
-  getUserfromDB
+  getUserfromDB,
+  getLastStageEvent,
+  getItemOrOrder
 };
