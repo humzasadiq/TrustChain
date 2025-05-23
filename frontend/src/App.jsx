@@ -41,7 +41,7 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
-            {/* All protected routes */}
+            {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               
               <Route path="/part/:id" element={<Details type="part" />} />
@@ -52,7 +52,6 @@ function App() {
               <Route path="/adar" element={<OrdersPage />} />
             <Route path="/contact" element={<Contact />} />
             </Route>
-
           </Routes>
         </AuthProvider>
       </Router>
