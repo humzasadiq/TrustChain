@@ -3,6 +3,10 @@
 ## Overview
 TrustChain is a comprehensive solution for tracking and verifying automotive parts throughout their lifecycle in repair and insurance claims. The platform combines ESP32-based RFID scanning with blockchain technology to ensure authenticity and prevent fraud in the automotive supply chain.
 
+## Architecture
+
+![TrustChain Architecture](images/image.png)
+
 ## Screenshots
 
 ### Dashboard
